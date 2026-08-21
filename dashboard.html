@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Schedule — Live Music Space Coast</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fa;color:#1a1a2e}
+.header{background:#0d2137;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.header h1{color:#fff;font-size:18px}
+.header button{background:none;border:1px solid #4fc3f7;color:#4fc3f7;padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer}
+.wrap{padding:16px;max-width:520px;margin:0 auto}
+.card{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.card .date{font-weight:700;font-size:14px;color:#0d2137;margin-bottom:10px}
+input,button.save,button.del{font-size:14px}
+input{width:100%;padding:8px 10px;border-radius:6px;border:1px solid #ddd;margin-bottom:8px}
+.row{display:flex;gap:8px}
+.row input:first-child{flex:2}
+.row input:last-child{flex:1}
+.actions{display:flex;gap:8px;margin-top:8px}
+button.save{background:#00a651;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}
+button.del{background:#fff;color:#ff5252;border:1px solid #ff5252;padding:8px 14px;border-radius:6px;cursor:pointer}
+.add-day{background:#e8f4fd;color:#0077cc;border:none;padding:12px;border-radius:8px;width:100%;font-weight:600;cursor:pointer;margin-top:8px}
+.status{font-size:12px;color:#888;margin-left:8px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1 id="venueName">Loading…</h1>
+  <button id="logout">Log out</button>
+</div>
+<div class="wrap" id="wrap">
+  <p style="color:#888;font-size:13px;margin-bottom:12px">Add or edit this week's lineup. Saves are live on the site right away — leave the band field blank and save to remove a night.</p>
+  <div id="week"></div>
+</div>
+
+<script>
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let venue = null;
+
+function fmtDate(d) { return d.toISOString().slice(0, 10); }
+function labelFor(d) {
+  return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+}
+
+async function init() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+
+  const { data: venueRow, error } = await client
+    .from("venues")
+    .select("*")
+    .eq("owner_user_id", session.user.id)
+    .single();
+
+  if (error || !venueRow) {
+    document.getElementById("venueName").textContent = "No venue linked to this login yet";
+    return;
+  }
+  venue = venueRow;
+  document.getElementById("venueName").textContent = venue.name;
+  await renderWeek();
+}
+
+async function renderWeek() {
+  const weekEl = document.getElementById("week");
+  weekEl.innerHTML = "";
+
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+  const { data: shows } = await client
+    .from("shows")
+    .select("*")
+    .eq("venue_id", venue.id)
+    .gte("show_date", fmtDate(days[0]))
+    .lte("show_date", fmtDate(days[6]));
+
+  for (const d of days) {
+    const dateStr = fmtDate(d);
+    const existing = (shows || []).find((s) => s.show_date === dateStr);
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="date">${labelFor(d)}</div>
+      <input type="text" class="band" placeholder="Band / act name" value="${existing?.band_name ?? ""}">
+      <div class="row">
+        <input type="time" class="start_time" value="${existing?.start_time?.slice(0,5) ?? ""}">
+        <input type="text" class="notes" placeholder="Notes (optional)" value="${existing?.notes ?? ""}">
+      </div>
+      <div class="actions">
+        <button class="save">Save</button>
+        ${existing ? '<button class="del">Remove</button>' : ""}
+        <span class="status"></span>
+      </div>
+    `;
+
+    card.querySelector(".save").addEventListener("click", async () => {
+      const band = card.querySelector(".band").value.trim();
+      const startTime = card.querySelector(".start_time").value || null;
+      const notes = card.querySelector(".notes").value.trim();
+      const statusEl = card.querySelector(".status");
+
+      if (!band) {
+        if (existing) await client.from("shows").delete().eq("id", existing.id);
+        statusEl.textContent = "Cleared";
+      } else if (existing) {
+        await client.from("shows").update({ band_name: band, start_time: startTime, notes }).eq("id", existing.id);
+        statusEl.textContent = "Saved";
+      } else {
+        await client.from("shows").insert({ venue_id: venue.id, show_date: dateStr, band_name: band, start_time: startTime, notes });
+        statusEl.textContent = "Saved";
+      }
+      setTimeout(() => renderWeek(), 400);
+    });
+
+    if (existing) {
+      card.querySelector(".del").addEventListener("click", async () => {
+        await client.from("shows").delete().eq("id", existing.id);
+        renderWeek();
+      });
+    }
+
+    weekEl.appendChild(card);
+  }
+}
+
+document.getElementById("logout").addEventListener("click", async () => {
+  await client.auth.signOut();
+  window.location.href = "login.html";
+});
+
+init();
+</script>
+</body>
+</html>
