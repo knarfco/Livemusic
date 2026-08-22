@@ -1,0 +1,33 @@
+name: Deploy site to Hostinger
+
+# Uploads the public web files straight to Hostinger over FTP any time they
+# change on main — replaces zipping the files and uploading them by hand.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "*.html"
+      - "config.js"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload to Hostinger via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          server-dir: ${{ secrets.HOSTINGER_FTP_DIR }}
+          local-dir: ./
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/*.sql
+            **/*.sh
+            **/README.md
