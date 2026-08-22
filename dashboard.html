@@ -3,33 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your Schedule — Live Music Space Coast</title>
+<title>CORXIT Stage — Your Schedule</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fa;color:#1a1a2e}
-.header{background:#0d2137;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
-.header h1{color:#fff;font-size:18px}
-.header button{background:none;border:1px solid #4fc3f7;color:#4fc3f7;padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer}
+body{font-family:'Inter',system-ui,sans-serif;background:#F7F5F1;color:#0D0E10}
+.header{background:#0D0E10;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand .mark{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.1em;color:#FF7A1A;text-transform:uppercase}
+.header h1{color:#fff;font-family:'Inter Tight',system-ui,sans-serif;font-size:17px}
+.header button{background:none;border:1px solid #FF7A1A;color:#FF7A1A;padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer}
 .wrap{padding:16px;max-width:520px;margin:0 auto}
 .card{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.card .date{font-weight:700;font-size:14px;color:#0d2137;margin-bottom:10px}
+.card .date{font-family:'Inter Tight',system-ui,sans-serif;font-weight:700;font-size:14px;color:#0D0E10;margin-bottom:10px}
 input,button.save,button.del{font-size:14px}
 input{width:100%;padding:8px 10px;border-radius:6px;border:1px solid #ddd;margin-bottom:8px}
 .row{display:flex;gap:8px}
 .row input:first-child{flex:2}
 .row input:last-child{flex:1}
 .actions{display:flex;gap:8px;margin-top:8px}
-button.save{background:#00a651;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}
+button.save{background:#2FB86A;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}
 button.del{background:#fff;color:#ff5252;border:1px solid #ff5252;padding:8px 14px;border-radius:6px;cursor:pointer}
-.add-day{background:#e8f4fd;color:#0077cc;border:none;padding:12px;border-radius:8px;width:100%;font-weight:600;cursor:pointer;margin-top:8px}
-.status{font-size:12px;color:#888;margin-left:8px}
+.status{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#888;margin-left:8px}
 </style>
 </head>
 <body>
 <div class="header">
-  <h1 id="venueName">Loading…</h1>
+  <div>
+    <div class="brand"><span class="mark">CORXIT STAGE</span></div>
+    <h1 id="venueName">Loading…</h1>
+  </div>
   <button id="logout">Log out</button>
 </div>
 <div class="wrap" id="wrap">
