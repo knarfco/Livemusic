@@ -75,7 +75,19 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .wing-card .city{font-size:11px;color:var(--teal);margin:2px 0 6px;font-weight:600;text-transform:uppercase}
 .wing-card .band{font-size:14px;font-weight:600;color:var(--ink)}
 .wing-card .time{font-family:var(--font-display);font-size:14px;color:var(--orange)}
+.wing-card.left{padding:20px}
+.wing-card.left .venue{font-size:21px}
+.wing-card.left .band{font-size:15px}
+.wing-card.right{padding:13px}
+.wing-card.right .venue{font-size:16px}
+.wing-card.right .band{font-size:13px}
 @media (max-width:420px){.wings{grid-template-columns:1fr}}
+
+.directory{padding:8px 18px 40px}
+.directory h2{font-family:var(--font-display);font-weight:400;font-size:18px;color:var(--plum);margin-bottom:10px}
+.directory ul{list-style:none}
+.directory li{font-size:13px;color:var(--plum);opacity:.7;padding:4px 0;border-bottom:1px dashed rgba(43,19,49,.15)}
+.directory li span{opacity:.6;font-size:11px}
 </style>
 </head>
 <body>
@@ -86,6 +98,7 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 <svg class="wave" viewBox="0 0 1440 40" preserveAspectRatio="none"><path fill="#F4622D" d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z"/></svg>
 <div class="day-picker" id="dayPicker"></div>
 <div class="list" id="list"><div class="empty">Loading…</div></div>
+<div class="directory" id="directory"></div>
 
 <script>
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -170,7 +183,10 @@ async function loadShows() {
   }
   if (wings.length) {
     html += `<div class="featured wings">${wings
-      .map((s) => `<div class="wing-card"><span class="badge">${s.venues?.tier === "stage_left" ? "STAGE LEFT" : "STAGE RIGHT"}</span>${cardHTML(s)}</div>`)
+      .map((s) => {
+        const isLeft = s.venues?.tier === "stage_left";
+        return `<div class="wing-card ${isLeft ? "left" : "right"}"><span class="badge">${isLeft ? "STAGE LEFT" : "STAGE RIGHT"}</span>${cardHTML(s)}</div>`;
+      })
       .join("")}</div>`;
   }
   html += regular.map((s) => `<div class="card">${cardHTML(s)}</div>`).join("");
@@ -178,8 +194,25 @@ async function loadShows() {
   listEl.innerHTML = html || '<div class="empty">No live music posted for this day yet.</div>';
 }
 
+async function loadDirectory() {
+  const dirEl = document.getElementById("directory");
+  const { data, error } = await client
+    .from("venues")
+    .select("name, city, is_active")
+    .eq("is_active", false)
+    .order("name", { ascending: true });
+
+  if (error || !data || data.length === 0) return;
+
+  dirEl.innerHTML = `
+    <h2>More Venues on the Space Coast</h2>
+    <ul>${data.map((v) => `<li>${v.name} <span>— ${v.city}</span></li>`).join("")}</ul>
+  `;
+}
+
 renderPicker();
 loadShows();
+loadDirectory();
 </script>
 </body>
 </html>
