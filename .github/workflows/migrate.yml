@@ -1,0 +1,26 @@
+name: Apply database migrations
+
+# Runs automatically any time a migration_*.sql file changes on main, and
+# can also be triggered by hand from the Actions tab. This replaces
+# manually pasting SQL into Supabase — push the file, this runs it.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "migration_*.sql"
+      - "run_migrations.sh"
+  workflow_dispatch: {}
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run pending migrations
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: bash run_migrations.sh
