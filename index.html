@@ -39,20 +39,12 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .day-btn.active{background:var(--pink);color:var(--cream);border-color:var(--cream)}
 .list{padding:22px 18px 18px}
 .card{
-  position:relative;background:var(--cream);border-radius:4px;padding:20px 20px 18px;margin-bottom:22px;
-  box-shadow:5px 5px 0 var(--teal);border:2px solid var(--plum-deep);transition:transform .15s ease
+  position:relative;padding:12px 2px;margin-bottom:0;border-bottom:1px solid rgba(43,19,49,.15)
 }
-.card:nth-child(odd){transform:rotate(-1.1deg)}
-.card:nth-child(even){transform:rotate(.9deg)}
-.card:hover,.card:active{transform:rotate(0deg) scale(1.015)}
-.card::before{
-  content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%);
-  width:16px;height:16px;border-radius:50%;background:var(--pink);border:2px solid var(--plum-deep)
-}
-.card .venue{font-family:var(--font-display);font-weight:400;font-size:22px;color:var(--plum-deep)}
-.card .city{font-size:12px;color:var(--teal);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-.card .band{font-size:16px;color:var(--ink);margin-top:4px;font-weight:600}
-.card .time{font-family:var(--font-display);font-size:16px;color:var(--orange);font-weight:400}
+.card .venue{font-family:var(--font-display);font-weight:400;font-size:17px;color:var(--plum-deep)}
+.card .city{font-size:10.5px;color:var(--teal);margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.card .band{font-size:14px;color:var(--ink);margin-top:2px;font-weight:600}
+.card .time{font-family:var(--font-display);font-size:14px;color:var(--orange);font-weight:400}
 .empty{padding:40px 20px;text-align:center;color:var(--plum);font-weight:500}
 
 .badge{display:inline-block;font-family:var(--font-display);font-size:11px;letter-spacing:.08em;padding:3px 10px;border-radius:20px;margin-bottom:10px}
@@ -68,13 +60,13 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .center-card .time{font-family:var(--font-display);font-size:18px;color:var(--orange)}
 .wings{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
 .wing-card{
-  position:relative;background:var(--cream);border-radius:6px;padding:22px 18px;border:2.5px solid var(--orange);box-shadow:4px 4px 0 var(--plum-deep)
+  position:relative;background:var(--cream);border-radius:6px;padding:18px 16px;border:2.5px solid var(--orange);box-shadow:4px 4px 0 var(--plum-deep)
 }
 .wing-card .badge{background:var(--orange);color:var(--cream);font-size:10px;padding:2px 8px}
-.wing-card .venue{font-family:var(--font-display);font-size:25px;color:var(--plum-deep)}
-.wing-card .city{font-size:11px;color:var(--teal);margin:2px 0 6px;font-weight:600;text-transform:uppercase}
-.wing-card .band{font-size:17px;font-weight:600;color:var(--ink)}
-.wing-card .time{font-family:var(--font-display);font-size:17px;color:var(--orange)}
+.wing-card .venue{font-family:var(--font-display);font-size:21px;color:var(--plum-deep)}
+.wing-card .city{font-size:10.5px;color:var(--teal);margin:2px 0 5px;font-weight:600;text-transform:uppercase}
+.wing-card .band{font-size:15px;font-weight:600;color:var(--ink)}
+.wing-card .time{font-family:var(--font-display);font-size:15px;color:var(--orange)}
 @media (max-width:420px){.wings{grid-template-columns:1fr}}
 
 .directory{padding:8px 18px 40px}
