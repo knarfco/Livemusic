@@ -35,6 +35,7 @@ input{width:100%;padding:8px 10px;border-radius:4px;border:2px solid #2B1331;mar
 button.save{background:#1B6B6B;color:#fff;border:2px solid #2B1331;padding:8px 14px;border-radius:4px;cursor:pointer;font-weight:700}
 button.del{background:#fff;color:#E63B7A;border:2px solid #E63B7A;padding:8px 14px;border-radius:4px;cursor:pointer;font-weight:700}
 .status{font-size:12px;color:#888;margin-left:4px;font-weight:600}
+.banner{background:#F4B942;color:#2B1331;font-weight:700;font-size:13.5px;padding:12px 20px;text-align:center;display:none}
 </style>
 </head>
 <body>
@@ -42,6 +43,7 @@ button.del{background:#fff;color:#E63B7A;border:2px solid #E63B7A;padding:8px 14
   <h1 id="venueName">Loading…</h1>
   <button id="logout">Log out</button>
 </div>
+<div class="banner" id="pendingBanner">Your listing isn't public yet — reach out to finish setting up payment and we'll get you live.</div>
 <div class="wrap" id="wrap">
   <p style="color:#888;font-size:13px;margin-bottom:12px">Add or edit this week's lineup. Saves are live on the site right away — leave the band field blank and save to remove a night.</p>
   <div id="week"></div>
@@ -56,22 +58,47 @@ function labelFor(d) {
   return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
 }
 
+function slugify(name, suffix) {
+  const base = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return `${base}-${suffix}`;
+}
+
 async function init() {
   const { data: { session } } = await client.auth.getSession();
   if (!session) { window.location.href = "login.html"; return; }
 
-  const { data: venueRow, error } = await client
+  let { data: venueRow } = await client
     .from("venues")
     .select("*")
     .eq("owner_user_id", session.user.id)
-    .single();
+    .maybeSingle();
 
-  if (error || !venueRow) {
+  // First login after signing up (if email confirmation delayed venue creation) —
+  // finish creating the venue now from the info saved at signup.
+  const pendingName = session.user.user_metadata?.pending_venue_name;
+  if (!venueRow && pendingName) {
+    const slug = slugify(pendingName, session.user.id.slice(0, 6));
+    const { data: created } = await client
+      .from("venues")
+      .insert({
+        name: pendingName,
+        city: session.user.user_metadata?.pending_venue_city || "Cocoa Beach",
+        slug, owner_user_id: session.user.id, is_active: false,
+      })
+      .select()
+      .single();
+    venueRow = created;
+  }
+
+  if (!venueRow) {
     document.getElementById("venueName").textContent = "No venue linked to this login yet";
     return;
   }
   venue = venueRow;
   document.getElementById("venueName").textContent = venue.name;
+  if (!venue.is_active) {
+    document.getElementById("pendingBanner").style.display = "block";
+  }
   await renderWeek();
 }
 

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage — List Your Venue</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Poppins:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Poppins',system-ui,sans-serif;color:#FDF3E7;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:#1C0C22;position:relative;overflow:hidden;
+}
+body::before{
+  content:"";position:absolute;bottom:-150%;left:50%;width:250vmax;height:250vmax;transform:translateX(-50%);
+  background-image:repeating-conic-gradient(from 0deg, rgba(244,98,45,.35) 0deg 5deg, transparent 5deg 12deg);
+  animation:spin 90s linear infinite;z-index:0
+}
+@keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
+.box{position:relative;z-index:1;background:#FDF3E7;color:#2B1331;border-radius:6px;padding:32px;width:100%;max-width:380px;border:2px solid #1C0C22;box-shadow:6px 6px 0 #F4B942}
+h1{
+  font-family:'Boogaloo',cursive;font-weight:400;font-size:28px;margin-bottom:6px;
+  background:linear-gradient(90deg,#F4B942,#F4622D 60%,#E63B7A);-webkit-background-clip:text;background-clip:text;color:transparent
+}
+p{color:#1B6B6B;font-size:13px;margin-bottom:22px;font-weight:500}
+label{display:block;font-size:13px;margin-bottom:6px;color:#2B1331;font-weight:600}
+input{width:100%;padding:10px 12px;border-radius:4px;border:2px solid #2B1331;background:#fff;color:#2B1331;margin-bottom:14px;font-size:15px;font-family:'Poppins',sans-serif}
+button{width:100%;padding:12px;border:2px solid #2B1331;border-radius:4px;background:#F4622D;color:#FDF3E7;font-family:'Boogaloo',cursive;font-size:18px;letter-spacing:.02em;cursor:pointer}
+.error{color:#E63B7A;font-size:13px;margin-top:12px;min-height:16px;font-weight:600}
+.done{display:none;font-size:14px;line-height:1.5;font-weight:500}
+.done strong{color:#F4622D}
+</style>
+</head>
+<body>
+<div class="box">
+  <div id="formWrap">
+    <h1>&#9835; List Your Venue</h1>
+    <p>Create your login now. Your listing goes live once we're squared away on payment.</p>
+    <form id="signupForm">
+      <label for="venueName">Venue name</label>
+      <input type="text" id="venueName" required>
+      <label for="city">City</label>
+      <input type="text" id="city" value="Cocoa Beach" required>
+      <label for="email">Email</label>
+      <input type="email" id="email" required>
+      <label for="password">Password</label>
+      <input type="password" id="password" minlength="6" required>
+      <button type="submit">Create My Login</button>
+      <div class="error" id="err"></div>
+    </form>
+  </div>
+  <div class="done" id="done">
+    <p style="margin-bottom:10px"><strong>You're set.</strong></p>
+    <p>Your login works now — head to the dashboard any time to build out your schedule. Your listing won't show publicly until we've confirmed payment; reach out and we'll get that squared away.</p>
+    <p style="margin-top:16px"><a href="dashboard.html" style="color:#F4622D;font-weight:700">Go to my dashboard &rarr;</a></p>
+  </div>
+</div>
+<script>
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function slugify(name, suffix) {
+  const base = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return `${base}-${suffix}`;
+}
+
+document.getElementById("signupForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const venueName = document.getElementById("venueName").value.trim();
+  const city = document.getElementById("city").value.trim();
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const errEl = document.getElementById("err");
+  errEl.textContent = "";
+
+  const { data, error } = await client.auth.signUp({
+    email, password,
+    options: { data: { pending_venue_name: venueName, pending_venue_city: city } },
+  });
+
+  if (error) {
+    errEl.textContent = error.message || "Something went wrong creating your login.";
+    return;
+  }
+
+  if (data.session) {
+    // Email confirmation is off for this project — session exists immediately,
+    // so create the venue row right now.
+    const slug = slugify(venueName, data.user.id.slice(0, 6));
+    await client.from("venues").insert({
+      name: venueName, city, slug, owner_user_id: data.user.id, is_active: false,
+    });
+  }
+  // If there's no session yet, email confirmation is required — dashboard.html
+  // will finish creating the venue automatically the first time they log in,
+  // using the pending_venue_name/city stored above.
+
+  document.getElementById("formWrap").style.display = "none";
+  document.getElementById("done").style.display = "block";
+});
+</script>
+</body>
+</html>

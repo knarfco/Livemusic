@@ -8,6 +8,7 @@ create table venues (
   slug text not null unique,
   city text not null default 'Cocoa Beach',
   owner_user_id uuid references auth.users(id),
+  is_active boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -27,9 +28,19 @@ create index shows_venue_idx on shows(venue_id);
 alter table venues enable row level security;
 alter table shows enable row level security;
 
--- Anyone (including the public site, with no login) can read venues and shows.
-create policy "public can read venues" on venues for select using (true);
-create policy "public can read shows" on shows for select using (true);
+-- The public (no login) can only see venues that have been activated after
+-- payment, and only shows belonging to an active venue.
+create policy "public can read active venues" on venues for select
+  using (is_active = true);
+create policy "public can read active venue shows" on shows for select
+  using (venue_id in (select id from venues where is_active = true));
+
+-- A signed-up user can create their own venue row (self-signup) and can
+-- always read their own row, even before you've activated them.
+create policy "owner can create own venue" on venues for insert
+  with check (owner_user_id = auth.uid());
+create policy "owner can read own venue" on venues for select
+  using (owner_user_id = auth.uid());
 
 -- A venue's logged-in user can only change ITS OWN row, and only shows
 -- that belong to a venue it owns.
