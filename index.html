@@ -3,42 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CORXIT Stage — Live Music Tonight</title>
+<title>Stage — Live Music Tonight</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Poppins:wght@400;500;600;700&display=swap');
 :root{
-  --obsidian:#0D0E10; --obsidian-raised:#17181B; --obsidian-line:#2A2C30;
-  --white:#FFFFFF; --white-soft:rgba(255,255,255,.78); --white-faint:rgba(255,255,255,.5);
-  --orange:#FF7A1A; --orange-hot:#FF4D00; --cream:#F7F5F1;
-  --font-display:'Inter Tight',system-ui,sans-serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'IBM Plex Mono','Courier New',monospace;
+  --plum:#2B1331; --plum-deep:#1C0C22;
+  --orange:#F4622D; --gold:#F4B942; --pink:#E63B7A; --teal:#1B6B6B;
+  --cream:#FDF3E7; --ink:#2B1331;
+  --font-display:'Boogaloo',cursive; --font-body:'Poppins',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-body);background:var(--cream);color:var(--obsidian)}
-.header{background:var(--obsidian);padding:20px}
-.brand{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
-.brand .mark{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.1em;color:var(--orange);text-transform:uppercase}
-.brand .product{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--white)}
-.header h1{color:var(--white);font-family:var(--font-display);font-weight:800;font-size:21px}
-.header p{color:var(--white-faint);font-size:13px;margin-top:4px}
-.day-picker{display:flex;gap:8px;padding:14px 16px;overflow-x:auto;background:var(--white);border-bottom:1px solid #eee}
-.day-btn{flex:0 0 auto;padding:8px 14px;border-radius:20px;border:1px solid #ddd;background:var(--white);font-family:var(--font-mono);font-size:12.5px;font-weight:600;color:var(--obsidian);cursor:pointer}
-.day-btn.active{background:var(--orange);color:var(--obsidian);border-color:var(--orange)}
-.list{padding:16px}
-.card{background:var(--white);border-radius:12px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:3px solid var(--orange)}
-.card .venue{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--obsidian)}
-.card .city{font-size:12px;color:#888;margin-bottom:6px}
-.card .band{font-size:15px;color:#333;margin-top:4px}
-.card .time{font-family:var(--font-mono);font-size:13px;color:var(--orange-hot);font-weight:600}
-.empty{padding:40px 20px;text-align:center;color:#888}
+body{font-family:var(--font-body);background:var(--cream);color:var(--ink)}
+.header{
+  background:var(--plum-deep);
+  background-image:repeating-conic-gradient(from 0deg at 50% -40%, rgba(244,98,45,.4) 0deg 5deg, transparent 5deg 12deg);
+  padding:28px 20px 22px;position:relative;overflow:hidden;text-align:center
+}
+.header h1{color:var(--gold);font-family:var(--font-display);font-weight:400;font-size:34px;letter-spacing:.02em;text-shadow:2px 2px 0 var(--pink)}
+.header p{color:var(--cream);opacity:.75;font-size:13px;margin-top:6px;font-weight:500}
+.day-picker{display:flex;gap:8px;padding:14px 16px;overflow-x:auto;background:var(--orange);border-bottom:4px solid var(--plum-deep)}
+.day-btn{flex:0 0 auto;padding:8px 16px;border-radius:20px;border:2px solid var(--plum-deep);background:var(--cream);font-family:var(--font-display);font-size:15px;font-weight:400;color:var(--plum-deep);cursor:pointer}
+.day-btn.active{background:var(--pink);color:var(--cream);border-color:var(--cream)}
+.list{padding:18px}
+.card{background:var(--cream);border-radius:4px;padding:18px 20px;margin-bottom:14px;box-shadow:5px 5px 0 var(--teal);border:2px solid var(--plum-deep)}
+.card .venue{font-family:var(--font-display);font-weight:400;font-size:22px;color:var(--plum-deep)}
+.card .city{font-size:12px;color:var(--teal);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.card .band{font-size:16px;color:var(--ink);margin-top:4px;font-weight:600}
+.card .time{font-family:var(--font-display);font-size:16px;color:var(--orange);font-weight:400}
+.empty{padding:40px 20px;text-align:center;color:var(--plum);font-weight:500}
 </style>
 </head>
 <body>
 <div class="header">
-  <div class="brand"><span class="mark">CORXIT</span><span class="product">STAGE (working title)</span></div>
-  <h1>&#127925; Live Music Tonight</h1>
-  <p>Updated directly by the venues, as it happens</p>
+  <h1>&#9835; STAGE</h1>
+  <p>Live music tonight, updated by the venues as it happens</p>
 </div>
 <div class="day-picker" id="dayPicker"></div>
 <div class="list" id="list"><div class="empty">Loading…</div></div>

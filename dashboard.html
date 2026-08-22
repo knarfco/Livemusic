@@ -3,38 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CORXIT Stage — Your Schedule</title>
+<title>Stage — Your Schedule</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Poppins:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:#F7F5F1;color:#0D0E10}
-.header{background:#0D0E10;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
-.brand{display:flex;align-items:baseline;gap:8px}
-.brand .mark{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.1em;color:#FF7A1A;text-transform:uppercase}
-.header h1{color:#fff;font-family:'Inter Tight',system-ui,sans-serif;font-size:17px}
-.header button{background:none;border:1px solid #FF7A1A;color:#FF7A1A;padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer}
+body{font-family:'Poppins',system-ui,sans-serif;background:#FDF3E7;color:#2B1331}
+.header{
+  background:#1C0C22;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;
+  background-image:repeating-conic-gradient(from 0deg at 50% -60%, rgba(244,98,45,.4) 0deg 5deg, transparent 5deg 12deg);
+}
+.header h1{color:#F4B942;font-family:'Boogaloo',cursive;font-weight:400;font-size:22px;text-shadow:1px 1px 0 #E63B7A}
+.header button{background:#F4622D;border:2px solid #FDF3E7;color:#FDF3E7;padding:6px 14px;border-radius:4px;font-size:13px;font-weight:700;cursor:pointer}
 .wrap{padding:16px;max-width:520px;margin:0 auto}
-.card{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.card .date{font-family:'Inter Tight',system-ui,sans-serif;font-weight:700;font-size:14px;color:#0D0E10;margin-bottom:10px}
+.card{background:#fff;border-radius:4px;padding:16px 20px;margin-bottom:14px;border:2px solid #2B1331;box-shadow:4px 4px 0 #1B6B6B}
+.card .date{font-family:'Boogaloo',cursive;font-weight:400;font-size:19px;color:#2B1331;margin-bottom:10px}
 input,button.save,button.del{font-size:14px}
-input{width:100%;padding:8px 10px;border-radius:6px;border:1px solid #ddd;margin-bottom:8px}
+input{width:100%;padding:8px 10px;border-radius:4px;border:2px solid #2B1331;margin-bottom:8px;font-family:'Poppins',sans-serif}
 .row{display:flex;gap:8px}
 .row input:first-child{flex:2}
 .row input:last-child{flex:1}
-.actions{display:flex;gap:8px;margin-top:8px}
-button.save{background:#2FB86A;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}
-button.del{background:#fff;color:#ff5252;border:1px solid #ff5252;padding:8px 14px;border-radius:6px;cursor:pointer}
-.status{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#888;margin-left:8px}
+.actions{display:flex;gap:8px;margin-top:8px;align-items:center}
+button.save{background:#1B6B6B;color:#fff;border:2px solid #2B1331;padding:8px 14px;border-radius:4px;cursor:pointer;font-weight:700}
+button.del{background:#fff;color:#E63B7A;border:2px solid #E63B7A;padding:8px 14px;border-radius:4px;cursor:pointer;font-weight:700}
+.status{font-size:12px;color:#888;margin-left:4px;font-weight:600}
 </style>
 </head>
 <body>
 <div class="header">
-  <div>
-    <div class="brand"><span class="mark">CORXIT STAGE</span></div>
-    <h1 id="venueName">Loading…</h1>
-  </div>
+  <h1 id="venueName">Loading…</h1>
   <button id="logout">Log out</button>
 </div>
 <div class="wrap" id="wrap">
