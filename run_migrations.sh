@@ -12,7 +12,7 @@ for f in $(ls migration_*.sql 2>/dev/null | sort); do
     echo "Skipping $f (already applied)"
   else
     echo "Applying $f"
-    psql "$DATABASE_URL" -f "$f"
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
     psql "$DATABASE_URL" -c "insert into _migrations_applied (filename) values ('$f');"
   fi
 done
