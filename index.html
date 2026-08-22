@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stage — Live Music Tonight</title>
+<title>AreaBands — Live Music Tonight</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <style>
@@ -25,12 +28,7 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 }
 .header>*{position:relative;z-index:1}
 @keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
-.header h1{
-  font-family:var(--font-display);font-weight:400;font-size:38px;letter-spacing:.02em;
-  background:linear-gradient(90deg,var(--gold),var(--orange) 50%,var(--pink));
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(2px 2px 0 rgba(0,0,0,.35))
-}
+.header .brand-logo{height:74px;max-width:80%;margin:0 auto;display:block}
 .header p{color:var(--cream);opacity:.75;font-size:13px;margin-top:6px;font-weight:500}
 .wave{display:block;width:100%;height:22px;margin-top:-2px}
 .day-picker{display:flex;gap:8px;padding:14px 16px 18px;overflow-x:auto;background:var(--orange);
@@ -94,7 +92,7 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 </head>
 <body>
 <div class="header">
-  <h1>&#9835; STAGE</h1>
+  <img class="brand-logo" src="assets/areabands-header.svg" alt="AreaBands">
   <p>Live music tonight, updated by the venues as it happens</p>
 </div>
 <svg class="wave" viewBox="0 0 1440 40" preserveAspectRatio="none"><path fill="#F4622D" d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z"/></svg>

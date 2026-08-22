@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stage — Venue Login</title>
+<title>AreaBands — Venue Login</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <style>
@@ -20,10 +23,8 @@ body::before{
 }
 @keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
 .box{position:relative;z-index:1;background:#FDF3E7;color:#2B1331;border-radius:6px;padding:32px;width:100%;max-width:360px;border:2px solid #1C0C22;box-shadow:6px 6px 0 #F4B942}
-h1{
-  font-family:'Boogaloo',cursive;font-weight:400;font-size:30px;margin-bottom:6px;
-  background:linear-gradient(90deg,#F4B942,#F4622D 60%,#E63B7A);-webkit-background-clip:text;background-clip:text;color:transparent
-}
+.brand-logo{height:56px;margin-bottom:14px;display:block}
+h1{font-family:'Boogaloo',cursive;font-weight:400;font-size:24px;margin-bottom:6px;color:#2B1331}
 p{color:#1B6B6B;font-size:13px;margin-bottom:24px;font-weight:500}
 label{display:block;font-size:13px;margin-bottom:6px;color:#2B1331;font-weight:600}
 input{width:100%;padding:10px 12px;border-radius:4px;border:2px solid #2B1331;background:#fff;color:#2B1331;margin-bottom:16px;font-size:15px;font-family:'Poppins',sans-serif}
@@ -33,7 +34,8 @@ button{width:100%;padding:12px;border:2px solid #2B1331;border-radius:4px;backgr
 </head>
 <body>
 <div class="box">
-  <h1>&#9835; Stage — Venue Login</h1>
+  <img class="brand-logo" src="assets/areabands-header-dark.svg" alt="AreaBands">
+  <h1>Venue Login</h1>
   <p>Update your live music schedule — changes go live immediately.</p>
   <form id="loginForm">
     <label for="email">Email</label>
