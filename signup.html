@@ -37,10 +37,12 @@ button{width:100%;padding:12px;border:2px solid #2B1331;border-radius:4px;backgr
 <div class="box">
   <div id="formWrap">
     <h1>&#9835; List Your Venue</h1>
-    <p>Create your login now. Your listing goes live once we're squared away on payment.</p>
+    <p>Free to be listed. $8.97/mo unlocks your live, self-updated show schedule — less than the price of one drink.</p>
     <form id="signupForm">
       <label for="venueName">Venue name</label>
       <input type="text" id="venueName" required>
+      <label for="address">Street address</label>
+      <input type="text" id="address" required>
       <label for="city">City</label>
       <input type="text" id="city" value="Cocoa Beach" required>
       <label for="email">Email</label>
@@ -52,8 +54,8 @@ button{width:100%;padding:12px;border:2px solid #2B1331;border-radius:4px;backgr
     </form>
   </div>
   <div class="done" id="done">
-    <p style="margin-bottom:10px"><strong>You're set.</strong></p>
-    <p>Your login works now — head to the dashboard any time to build out your schedule. Your listing won't show publicly until we've confirmed payment; reach out and we'll get that squared away.</p>
+    <p style="margin-bottom:10px"><strong>You're set — and you're already listed, free.</strong></p>
+    <p>Your name and address are live right now. To start publishing an actual show schedule that tourists and locals see, it's $8.97/month — reach out and we'll get that turned on.</p>
     <p style="margin-top:16px"><a href="dashboard.html" style="color:#F4622D;font-weight:700">Go to my dashboard &rarr;</a></p>
   </div>
 </div>
@@ -68,6 +70,7 @@ function slugify(name, suffix) {
 document.getElementById("signupForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const venueName = document.getElementById("venueName").value.trim();
+  const address = document.getElementById("address").value.trim();
   const city = document.getElementById("city").value.trim();
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -76,7 +79,7 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
 
   const { data, error } = await client.auth.signUp({
     email, password,
-    options: { data: { pending_venue_name: venueName, pending_venue_city: city } },
+    options: { data: { pending_venue_name: venueName, pending_venue_address: address, pending_venue_city: city } },
   });
 
   if (error) {
@@ -89,7 +92,7 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
     // so create the venue row right now.
     const slug = slugify(venueName, data.user.id.slice(0, 6));
     await client.from("venues").insert({
-      name: venueName, city, slug, owner_user_id: data.user.id, is_active: false,
+      name: venueName, address, city, slug, owner_user_id: data.user.id, is_active: false,
     });
   }
   // If there's no session yet, email confirmation is required — dashboard.html

@@ -6,9 +6,10 @@ create table venues (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text not null unique,
+  address text,
   city text not null default 'Cocoa Beach',
   owner_user_id uuid references auth.users(id),
-  is_active boolean not null default false,
+  is_active boolean not null default false, -- true once they're paying for the Stage feature
   created_at timestamptz not null default now()
 );
 
@@ -28,10 +29,10 @@ create index shows_venue_idx on shows(venue_id);
 alter table venues enable row level security;
 alter table shows enable row level security;
 
--- The public (no login) can only see venues that have been activated after
--- payment, and only shows belonging to an active venue.
-create policy "public can read active venues" on venues for select
-  using (is_active = true);
+-- Every venue's basic listing (name/address/city) is public and free —
+-- being listed costs nothing. Only the actual SHOW SCHEDULE is gated to
+-- venues paying for the Stage feature (is_active = true).
+create policy "public can read venues" on venues for select using (true);
 create policy "public can read active venue shows" on shows for select
   using (venue_id in (select id from venues where is_active = true));
 

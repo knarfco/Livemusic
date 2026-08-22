@@ -43,7 +43,7 @@ button.del{background:#fff;color:#E63B7A;border:2px solid #E63B7A;padding:8px 14
   <h1 id="venueName">Loading…</h1>
   <button id="logout">Log out</button>
 </div>
-<div class="banner" id="pendingBanner">Your listing isn't public yet — reach out to finish setting up payment and we'll get you live.</div>
+<div class="banner" id="pendingBanner">You're listed for free (name + address). Add $8.97/mo to publish this schedule live — reach out and we'll turn it on.</div>
 <div class="wrap" id="wrap">
   <p style="color:#888;font-size:13px;margin-bottom:12px">Add or edit this week's lineup. Saves are live on the site right away — leave the band field blank and save to remove a night.</p>
   <div id="week"></div>
@@ -82,6 +82,7 @@ async function init() {
       .from("venues")
       .insert({
         name: pendingName,
+        address: session.user.user_metadata?.pending_venue_address || null,
         city: session.user.user_metadata?.pending_venue_city || "Cocoa Beach",
         slug, owner_user_id: session.user.id, is_active: false,
       })
