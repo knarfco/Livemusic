@@ -11,11 +11,19 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:'Poppins',system-ui,sans-serif;color:#FDF3E7;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
-  background:#1C0C22;
-  background-image:repeating-conic-gradient(from 0deg at 50% 120%, rgba(244,98,45,.35) 0deg 5deg, transparent 5deg 12deg);
+  background:#1C0C22;position:relative;overflow:hidden;
 }
-.box{background:#FDF3E7;color:#2B1331;border-radius:6px;padding:32px;width:100%;max-width:360px;border:2px solid #1C0C22;box-shadow:6px 6px 0 #F4B942}
-h1{font-family:'Boogaloo',cursive;font-weight:400;font-size:30px;margin-bottom:6px;color:#2B1331}
+body::before{
+  content:"";position:absolute;bottom:-150%;left:50%;width:250vmax;height:250vmax;transform:translateX(-50%);
+  background-image:repeating-conic-gradient(from 0deg, rgba(244,98,45,.35) 0deg 5deg, transparent 5deg 12deg);
+  animation:spin 90s linear infinite;z-index:0
+}
+@keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
+.box{position:relative;z-index:1;background:#FDF3E7;color:#2B1331;border-radius:6px;padding:32px;width:100%;max-width:360px;border:2px solid #1C0C22;box-shadow:6px 6px 0 #F4B942}
+h1{
+  font-family:'Boogaloo',cursive;font-weight:400;font-size:30px;margin-bottom:6px;
+  background:linear-gradient(90deg,#F4B942,#F4622D 60%,#E63B7A);-webkit-background-clip:text;background-clip:text;color:transparent
+}
 p{color:#1B6B6B;font-size:13px;margin-bottom:24px;font-weight:500}
 label{display:block;font-size:13px;margin-bottom:6px;color:#2B1331;font-weight:600}
 input{width:100%;padding:10px 12px;border-radius:4px;border:2px solid #2B1331;background:#fff;color:#2B1331;margin-bottom:16px;font-size:15px;font-family:'Poppins',sans-serif}

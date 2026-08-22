@@ -10,11 +10,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Poppins:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Poppins',system-ui,sans-serif;background:#FDF3E7;color:#2B1331}
-.header{
-  background:#1C0C22;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;
-  background-image:repeating-conic-gradient(from 0deg at 50% -60%, rgba(244,98,45,.4) 0deg 5deg, transparent 5deg 12deg);
+.header{background:#1C0C22;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;position:relative;overflow:hidden}
+.header::before{
+  content:"";position:absolute;top:-200%;left:50%;width:250vmax;height:250vmax;transform:translateX(-50%);
+  background-image:repeating-conic-gradient(from 0deg, rgba(244,98,45,.4) 0deg 5deg, transparent 5deg 12deg);
+  animation:spin 90s linear infinite;z-index:0
 }
-.header h1{color:#F4B942;font-family:'Boogaloo',cursive;font-weight:400;font-size:22px;text-shadow:1px 1px 0 #E63B7A}
+@keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
+.header>*{position:relative;z-index:1}
+.header h1{
+  font-family:'Boogaloo',cursive;font-weight:400;font-size:22px;
+  background:linear-gradient(90deg,#F4B942,#F4622D 60%,#E63B7A);-webkit-background-clip:text;background-clip:text;color:transparent
+}
 .header button{background:#F4622D;border:2px solid #FDF3E7;color:#FDF3E7;padding:6px 14px;border-radius:4px;font-size:13px;font-weight:700;cursor:pointer}
 .wrap{padding:16px;max-width:520px;margin:0 auto}
 .card{background:#fff;border-radius:4px;padding:16px 20px;margin-bottom:14px;border:2px solid #2B1331;box-shadow:4px 4px 0 #1B6B6B}
