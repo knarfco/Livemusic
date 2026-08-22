@@ -10,6 +10,7 @@ create table venues (
   city text not null default 'Cocoa Beach',
   owner_user_id uuid references auth.users(id),
   is_active boolean not null default false, -- true once they're paying for the Stage feature
+  tier text not null default 'basic' check (tier in ('basic', 'stage_left', 'stage_right', 'center_stage')),
   created_at timestamptz not null default now()
 );
 

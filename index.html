@@ -54,6 +54,28 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .card .band{font-size:16px;color:var(--ink);margin-top:4px;font-weight:600}
 .card .time{font-family:var(--font-display);font-size:16px;color:var(--orange);font-weight:400}
 .empty{padding:40px 20px;text-align:center;color:var(--plum);font-weight:500}
+
+.badge{display:inline-block;font-family:var(--font-display);font-size:11px;letter-spacing:.08em;padding:3px 10px;border-radius:20px;margin-bottom:10px}
+.featured{padding:18px 18px 4px}
+.center-card{
+  position:relative;background:var(--cream);border-radius:6px;padding:26px 24px;margin-bottom:18px;
+  border:3px solid var(--gold);box-shadow:0 0 0 4px var(--plum-deep), 0 0 24px rgba(244,185,66,.5)
+}
+.center-card .badge{background:var(--gold);color:var(--plum-deep)}
+.center-card .venue{font-family:var(--font-display);font-size:30px;color:var(--plum-deep)}
+.center-card .city{font-size:12px;color:var(--teal);margin:4px 0 8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.center-card .band{font-size:19px;font-weight:700;color:var(--ink)}
+.center-card .time{font-family:var(--font-display);font-size:18px;color:var(--orange)}
+.wings{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
+.wing-card{
+  position:relative;background:var(--cream);border-radius:6px;padding:16px;border:2.5px solid var(--orange);box-shadow:3px 3px 0 var(--plum-deep)
+}
+.wing-card .badge{background:var(--orange);color:var(--cream);font-size:10px;padding:2px 8px}
+.wing-card .venue{font-family:var(--font-display);font-size:18px;color:var(--plum-deep)}
+.wing-card .city{font-size:11px;color:var(--teal);margin:2px 0 6px;font-weight:600;text-transform:uppercase}
+.wing-card .band{font-size:14px;font-weight:600;color:var(--ink)}
+.wing-card .time{font-family:var(--font-display);font-size:14px;color:var(--orange)}
+@media (max-width:420px){.wings{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -104,13 +126,22 @@ function renderPicker() {
   });
 }
 
+function cardHTML(show) {
+  return `
+    <div class="venue">${show.venues?.name ?? "Venue"}</div>
+    <div class="city">${show.venues?.city ?? ""}</div>
+    <div class="band">${show.band_name}</div>
+    <div class="time">${fmtTime(show.start_time)}</div>
+  `;
+}
+
 async function loadShows() {
   const listEl = document.getElementById("list");
   listEl.innerHTML = '<div class="empty">Loading…</div>';
 
   const { data, error } = await client
     .from("shows")
-    .select("band_name, start_time, notes, venues(name, city)")
+    .select("band_name, start_time, notes, venues(name, city, tier)")
     .eq("show_date", selected)
     .order("start_time", { ascending: true });
 
@@ -124,18 +155,27 @@ async function loadShows() {
     return;
   }
 
-  listEl.innerHTML = "";
-  for (const show of data) {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="venue">${show.venues?.name ?? "Venue"}</div>
-      <div class="city">${show.venues?.city ?? ""}</div>
-      <div class="band">${show.band_name}</div>
-      <div class="time">${fmtTime(show.start_time)}</div>
-    `;
-    listEl.appendChild(card);
+  const center = data.filter((s) => s.venues?.tier === "center_stage");
+  const left = data.filter((s) => s.venues?.tier === "stage_left");
+  const right = data.filter((s) => s.venues?.tier === "stage_right");
+  const wings = [...left, ...right];
+  const usedTiers = new Set(["center_stage", "stage_left", "stage_right"]);
+  const regular = data.filter((s) => !usedTiers.has(s.venues?.tier));
+
+  let html = "";
+  if (center.length) {
+    html += `<div class="featured">${center
+      .map((s) => `<div class="center-card"><span class="badge">&#9733; CENTER STAGE</span>${cardHTML(s)}</div>`)
+      .join("")}</div>`;
   }
+  if (wings.length) {
+    html += `<div class="featured wings">${wings
+      .map((s) => `<div class="wing-card"><span class="badge">${s.venues?.tier === "stage_left" ? "STAGE LEFT" : "STAGE RIGHT"}</span>${cardHTML(s)}</div>`)
+      .join("")}</div>`;
+  }
+  html += regular.map((s) => `<div class="card">${cardHTML(s)}</div>`).join("");
+
+  listEl.innerHTML = html || '<div class="empty">No live music posted for this day yet.</div>';
 }
 
 renderPicker();
