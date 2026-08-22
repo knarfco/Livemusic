@@ -11,9 +11,44 @@ create table venues (
   owner_user_id uuid references auth.users(id),
   is_active boolean not null default false, -- true once they're paying for the Stage feature
   tier text not null default 'basic' check (tier in ('basic', 'stage_left', 'stage_right', 'center_stage')),
+  zip_code text,
   lat double precision, lng double precision,
   created_at timestamptz not null default now()
 );
+
+-- Enforces zip-code exclusivity: at most 1 Center Stage, 2 each of Stage
+-- Left/Stage Right, per zip code. Assigning a slot that's full fails loudly.
+create or replace function enforce_tier_zip_limits()
+returns trigger as $$
+declare
+  cap integer;
+  existing_count integer;
+begin
+  if new.tier = 'center_stage' then cap := 1;
+  elsif new.tier in ('stage_left', 'stage_right') then cap := 2;
+  else
+    return new;
+  end if;
+
+  if new.zip_code is null then
+    raise exception 'A zip/postal code is required before assigning % tier', new.tier;
+  end if;
+
+  select count(*) into existing_count
+  from venues
+  where zip_code = new.zip_code and tier = new.tier and id <> new.id;
+
+  if existing_count >= cap then
+    raise exception 'Zip code % already has the maximum number of % slots (%)', new.zip_code, new.tier, cap;
+  end if;
+
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger venues_tier_zip_limit
+  before insert or update of tier, zip_code on venues
+  for each row execute function enforce_tier_zip_limits();
 
 create table shows (
   id uuid primary key default gen_random_uuid(),

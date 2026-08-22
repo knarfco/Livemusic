@@ -45,6 +45,8 @@ button{width:100%;padding:12px;border:2px solid #2B1331;border-radius:4px;backgr
       <input type="text" id="address" required>
       <label for="city">City</label>
       <input type="text" id="city" value="Cocoa Beach" required>
+      <label for="zipCode">Zip / postal code</label>
+      <input type="text" id="zipCode" required>
       <label for="email">Email</label>
       <input type="email" id="email" required>
       <label for="password">Password</label>
@@ -84,6 +86,7 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
   const venueName = document.getElementById("venueName").value.trim();
   const address = document.getElementById("address").value.trim();
   const city = document.getElementById("city").value.trim();
+  const zipCode = document.getElementById("zipCode").value.trim();
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   const errEl = document.getElementById("err");
@@ -91,7 +94,7 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
 
   const { data, error } = await client.auth.signUp({
     email, password,
-    options: { data: { pending_venue_name: venueName, pending_venue_address: address, pending_venue_city: city } },
+    options: { data: { pending_venue_name: venueName, pending_venue_address: address, pending_venue_city: city, pending_venue_zip: zipCode } },
   });
 
   if (error) {
@@ -105,7 +108,7 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
     const slug = slugify(venueName, data.user.id.slice(0, 6));
     const coords = await geocode(`${address}, ${city}, FL`);
     await client.from("venues").insert({
-      name: venueName, address, city, slug, owner_user_id: data.user.id, is_active: false,
+      name: venueName, address, city, zip_code: zipCode, slug, owner_user_id: data.user.id, is_active: false,
       lat: coords?.lat ?? null, lng: coords?.lng ?? null,
     });
   }

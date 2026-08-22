@@ -92,11 +92,12 @@ async function init() {
     const slug = slugify(pendingName, session.user.id.slice(0, 6));
     const pendingAddress = session.user.user_metadata?.pending_venue_address || "";
     const pendingCity = session.user.user_metadata?.pending_venue_city || "Cocoa Beach";
+    const pendingZip = session.user.user_metadata?.pending_venue_zip || null;
     const coords = await geocode(`${pendingAddress}, ${pendingCity}, FL`);
     const { data: created } = await client
       .from("venues")
       .insert({
-        name: pendingName, address: pendingAddress, city: pendingCity,
+        name: pendingName, address: pendingAddress, city: pendingCity, zip_code: pendingZip,
         slug, owner_user_id: session.user.id, is_active: false,
         lat: coords?.lat ?? null, lng: coords?.lng ?? null,
       })
