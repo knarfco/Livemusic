@@ -82,6 +82,15 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .directory ul{list-style:none}
 .directory li{font-size:13px;color:var(--plum);opacity:.7;padding:4px 0;border-bottom:1px dashed rgba(43,19,49,.15)}
 .directory li span{opacity:.6;font-size:11px}
+
+.near-me{background:var(--plum);padding:14px 18px;text-align:center}
+.near-me-btn{font-family:var(--font-display);font-size:15px;background:var(--gold);color:var(--plum-deep);border:2px solid var(--plum-deep);padding:8px 18px;border-radius:20px;cursor:pointer}
+.near-me-toggle{display:block;color:var(--cream);opacity:.7;font-size:12px;margin-top:8px;text-decoration:underline;background:none;border:none;cursor:pointer;width:100%}
+.near-me-address{display:none;gap:8px;margin-top:10px}
+.near-me-address input{flex:1;padding:8px 10px;border-radius:20px;border:2px solid var(--plum-deep);font-family:var(--font-body);font-size:14px}
+.near-me-address button{font-family:var(--font-display);font-size:14px;background:var(--orange);color:var(--cream);border:2px solid var(--plum-deep);padding:0 16px;border-radius:20px;cursor:pointer}
+.near-me-status{color:var(--cream);opacity:.8;font-size:12px;margin-top:8px}
+.distance{font-family:var(--font-body);font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.03em}
 </style>
 </head>
 <body>
@@ -90,6 +99,15 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
   <p>Live music tonight, updated by the venues as it happens</p>
 </div>
 <svg class="wave" viewBox="0 0 1440 40" preserveAspectRatio="none"><path fill="#F4622D" d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z"/></svg>
+<div class="near-me">
+  <button class="near-me-btn" id="useLocationBtn">&#128205; Use My Location</button>
+  <button class="near-me-toggle" id="toggleAddress">or type an address / hotel instead</button>
+  <div class="near-me-address" id="addressBox">
+    <input type="text" id="addressInput" placeholder="e.g. 1300 N Atlantic Ave, Cocoa Beach">
+    <button id="addressGoBtn">Go</button>
+  </div>
+  <div class="near-me-status" id="nearMeStatus"></div>
+</div>
 <div class="day-picker" id="dayPicker"></div>
 <div class="list" id="list"><div class="empty">Loading…</div></div>
 <div class="directory" id="directory"></div>
@@ -112,6 +130,69 @@ function fmtTime(t) {
   const ampm = +h < 12 ? "AM" : "PM";
   return `${hour}:${m} ${ampm}`;
 }
+
+let userLoc = null; // {lat, lng}
+
+function haversineMiles(lat1, lng1, lat2, lng2) {
+  const R = 3958.8;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function distanceLabel(venue) {
+  if (!userLoc || venue?.lat == null || venue?.lng == null) return "";
+  const mi = haversineMiles(userLoc.lat, userLoc.lng, venue.lat, venue.lng);
+  return `<div class="distance">${mi < 0.1 ? "right here" : mi.toFixed(1) + " mi away"}</div>`;
+}
+async function geocode(query) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`);
+    const results = await res.json();
+    if (!results || !results[0]) return null;
+    return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+  } catch (e) {
+    console.error("geocode failed", e);
+    return null;
+  }
+}
+function setUserLoc(loc, statusText) {
+  userLoc = loc;
+  document.getElementById("nearMeStatus").textContent = statusText;
+  loadShows();
+  loadDirectory();
+}
+
+document.getElementById("useLocationBtn").addEventListener("click", () => {
+  const statusEl = document.getElementById("nearMeStatus");
+  if (!navigator.geolocation) {
+    statusEl.textContent = "Location isn't available on this device — try typing an address instead.";
+    return;
+  }
+  statusEl.textContent = "Finding you…";
+  navigator.geolocation.getCurrentPosition(
+    (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }, "Showing what's closest to you."),
+    () => { statusEl.textContent = "Couldn't get your location — try typing an address instead."; }
+  );
+});
+
+document.getElementById("toggleAddress").addEventListener("click", () => {
+  const box = document.getElementById("addressBox");
+  box.style.display = box.style.display === "flex" ? "none" : "flex";
+});
+
+document.getElementById("addressGoBtn").addEventListener("click", async () => {
+  const q = document.getElementById("addressInput").value.trim();
+  const statusEl = document.getElementById("nearMeStatus");
+  if (!q) return;
+  statusEl.textContent = "Looking that up…";
+  const loc = await geocode(q);
+  if (!loc) { statusEl.textContent = "Couldn't find that address — try adding the city."; return; }
+  setUserLoc(loc, `Showing what's closest to "${q}".`);
+});
 
 const days = Array.from({ length: 7 }, (_, i) => {
   const d = new Date();
@@ -137,6 +218,7 @@ function cardHTML(show) {
   return `
     <div class="venue">${show.venues?.name ?? "Venue"}</div>
     <div class="city">${show.venues?.city ?? ""}</div>
+    ${distanceLabel(show.venues)}
     <div class="band">${show.band_name}</div>
     <div class="time">${fmtTime(show.start_time)}</div>
   `;
@@ -148,7 +230,7 @@ async function loadShows() {
 
   const { data, error } = await client
     .from("shows")
-    .select("band_name, start_time, notes, venues(name, city, tier)")
+    .select("band_name, start_time, notes, venues(name, city, tier, lat, lng)")
     .eq("show_date", selected)
     .order("start_time", { ascending: true });
 
@@ -160,6 +242,14 @@ async function loadShows() {
   if (!data || data.length === 0) {
     listEl.innerHTML = '<div class="empty">No live music posted for this day yet.</div>';
     return;
+  }
+
+  if (userLoc) {
+    data.sort((a, b) => {
+      const da = a.venues?.lat != null ? haversineMiles(userLoc.lat, userLoc.lng, a.venues.lat, a.venues.lng) : Infinity;
+      const db = b.venues?.lat != null ? haversineMiles(userLoc.lat, userLoc.lng, b.venues.lat, b.venues.lng) : Infinity;
+      return da - db;
+    });
   }
 
   const center = data.filter((s) => s.venues?.tier === "center_stage");
@@ -192,15 +282,23 @@ async function loadDirectory() {
   const dirEl = document.getElementById("directory");
   const { data, error } = await client
     .from("venues")
-    .select("name, city, is_active")
+    .select("name, city, is_active, lat, lng")
     .eq("is_active", false)
     .order("name", { ascending: true });
 
   if (error || !data || data.length === 0) return;
 
+  if (userLoc) {
+    data.sort((a, b) => {
+      const da = a.lat != null ? haversineMiles(userLoc.lat, userLoc.lng, a.lat, a.lng) : Infinity;
+      const db = b.lat != null ? haversineMiles(userLoc.lat, userLoc.lng, b.lat, b.lng) : Infinity;
+      return da - db;
+    });
+  }
+
   dirEl.innerHTML = `
     <h2>More Venues on the Space Coast</h2>
-    <ul>${data.map((v) => `<li>${v.name} <span>— ${v.city}</span></li>`).join("")}</ul>
+    <ul>${data.map((v) => `<li>${v.name} <span>— ${v.city}</span> ${distanceLabel(v)}</li>`).join("")}</ul>
   `;
 }
 

@@ -58,6 +58,18 @@ function labelFor(d) {
   return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
 }
 
+async function geocode(query) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`);
+    const results = await res.json();
+    if (!results || !results[0]) return null;
+    return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+  } catch (e) {
+    console.error("geocode failed", e);
+    return null;
+  }
+}
+
 function slugify(name, suffix) {
   const base = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
   return `${base}-${suffix}`;
@@ -78,13 +90,15 @@ async function init() {
   const pendingName = session.user.user_metadata?.pending_venue_name;
   if (!venueRow && pendingName) {
     const slug = slugify(pendingName, session.user.id.slice(0, 6));
+    const pendingAddress = session.user.user_metadata?.pending_venue_address || "";
+    const pendingCity = session.user.user_metadata?.pending_venue_city || "Cocoa Beach";
+    const coords = await geocode(`${pendingAddress}, ${pendingCity}, FL`);
     const { data: created } = await client
       .from("venues")
       .insert({
-        name: pendingName,
-        address: session.user.user_metadata?.pending_venue_address || null,
-        city: session.user.user_metadata?.pending_venue_city || "Cocoa Beach",
+        name: pendingName, address: pendingAddress, city: pendingCity,
         slug, owner_user_id: session.user.id, is_active: false,
+        lat: coords?.lat ?? null, lng: coords?.lng ?? null,
       })
       .select()
       .single();

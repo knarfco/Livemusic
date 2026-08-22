@@ -62,6 +62,18 @@ button{width:100%;padding:12px;border:2px solid #2B1331;border-radius:4px;backgr
 <script>
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+async function geocode(query) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`);
+    const results = await res.json();
+    if (!results || !results[0]) return null;
+    return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+  } catch (e) {
+    console.error("geocode failed", e);
+    return null;
+  }
+}
+
 function slugify(name, suffix) {
   const base = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
   return `${base}-${suffix}`;
@@ -91,8 +103,10 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
     // Email confirmation is off for this project — session exists immediately,
     // so create the venue row right now.
     const slug = slugify(venueName, data.user.id.slice(0, 6));
+    const coords = await geocode(`${address}, ${city}, FL`);
     await client.from("venues").insert({
       name: venueName, address, city, slug, owner_user_id: data.user.id, is_active: false,
+      lat: coords?.lat ?? null, lng: coords?.lng ?? null,
     });
   }
   // If there's no session yet, email confirmation is required — dashboard.html
