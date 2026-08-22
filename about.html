@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find Live Music Near You Tonight — The Local Bars &amp; Bands Guide | AreaBands</title>
+<meta name="description" content="AreaBands is the free, self-updated guide to live music and local bars near you — no app download, no corporate chains, just tonight's real lineup, straight from the venues themselves. Own a bar, restaurant, or music venue? You might already be listed for free.">
+<link rel="canonical" href="https://areabands.com/about.html">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:title" content="Find Live Music Near You Tonight — AreaBands">
+<meta property="og:description" content="The free, self-updated guide to live music and local bars near you. No app download. No corporate chains. Just tonight's real lineup.">
+<meta property="og:type" content="website">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Poppins:wght@400;500;600;700&display=swap');
+:root{
+  --plum:#2B1331; --plum-deep:#1C0C22;
+  --orange:#F4622D; --gold:#F4B942; --pink:#E63B7A; --teal:#1B6B6B;
+  --cream:#FDF3E7; --ink:#2B1331;
+  --font-display:'Boogaloo',cursive; --font-body:'Poppins',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--cream);color:var(--ink);line-height:1.65}
+body{background-image:radial-gradient(rgba(43,19,49,.05) 1.5px, transparent 1.5px);background-size:16px 16px}
+
+.header{background:var(--plum-deep);padding:34px 20px 28px;position:relative;overflow:hidden;text-align:center}
+.header::before{
+  content:"";position:absolute;top:-150%;left:50%;width:250vmax;height:250vmax;transform:translateX(-50%);
+  background-image:repeating-conic-gradient(from 0deg, rgba(244,98,45,.4) 0deg 5deg, transparent 5deg 12deg);
+  animation:spin 90s linear infinite;z-index:0
+}
+@keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
+.header>*{position:relative;z-index:1}
+.header .brand-logo{height:70px;max-width:80%;margin:0 auto;display:block}
+.header .tagline{color:var(--gold);font-family:var(--font-display);font-size:18px;letter-spacing:.03em;margin-top:10px}
+.header p{color:var(--cream);opacity:.72;font-size:12px;margin-top:4px;font-weight:500}
+.header nav{margin-top:16px;font-size:13px}
+.header nav a{color:var(--cream);opacity:.85;text-decoration:none;margin:0 8px;font-weight:600}
+.header nav a:hover{opacity:1;text-decoration:underline}
+
+.wrap{max-width:720px;margin:0 auto;padding:36px 22px 60px}
+h1{font-family:var(--font-display);font-weight:400;font-size:32px;color:var(--plum-deep);line-height:1.2;margin-bottom:18px}
+h2{font-family:var(--font-display);font-weight:400;font-size:24px;color:var(--orange);margin:38px 0 12px;border-bottom:3px solid var(--gold);padding-bottom:6px}
+h3{font-family:var(--font-display);font-weight:400;font-size:19px;color:var(--teal);margin:26px 0 8px}
+p{margin-bottom:14px;font-size:15.5px}
+.lede{font-size:17.5px;color:var(--plum);font-weight:500}
+ul,ol{margin:0 0 16px 22px}
+li{margin-bottom:6px;font-size:15.5px}
+strong{color:var(--plum-deep)}
+a{color:var(--orange);font-weight:600}
+.callout{background:#fff;border:2px solid var(--gold);border-left:6px solid var(--orange);border-radius:6px;padding:16px 18px;margin:20px 0;font-size:14.5px}
+.callout strong{color:var(--orange)}
+.cta-inline{display:inline-block;margin-top:6px;background:var(--orange);color:var(--cream)!important;padding:8px 18px;border-radius:20px;font-family:var(--font-display);font-size:15px;letter-spacing:.02em;text-decoration:none}
+
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid rgba(43,19,49,.15)}
+th{font-family:var(--font-display);font-weight:400;color:var(--teal);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+
+.faq-group h3{margin-top:34px;font-size:20px;color:var(--pink);border-bottom:2px dashed rgba(43,19,49,.15);padding-bottom:6px}
+.faq-item{margin-bottom:18px}
+.faq-item .q{font-family:var(--font-display);font-weight:400;font-size:16.5px;color:var(--plum-deep);margin-bottom:4px}
+.faq-item .a{font-size:14.5px;color:var(--ink)}
+
+footer{background:var(--plum-deep);color:var(--cream);text-align:center;padding:30px 20px;font-size:12.5px;opacity:.8}
+footer a{color:var(--gold)}
+</style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"Is AreaBands free to use for finding live music?","acceptedAnswer":{"@type":"Answer","text":"Yes. Browsing live music listings, using your location to find shows tonight, and viewing every venue's schedule is completely free for anyone, with no account, login, or app download required."}},
+    {"@type":"Question","name":"Do I need to download an app to use AreaBands?","acceptedAnswer":{"@type":"Answer","text":"No. AreaBands runs entirely in your phone or computer's web browser. There is no app to download, no app store account needed, and no storage space used on your device."}},
+    {"@type":"Question","name":"How do I find live music near me right now?","acceptedAnswer":{"@type":"Answer","text":"Open AreaBands and tap \"Use My Location\" to see live music happening tonight sorted by distance, or type in an address, hotel name, or zip code if you'd rather not share your location."}},
+    {"@type":"Question","name":"How often is the live music schedule updated?","acceptedAnswer":{"@type":"Answer","text":"Venues update their own schedules directly and changes go live immediately. Because venue owners maintain their own listings, schedules stay accurate without anyone else in the loop."}},
+    {"@type":"Question","name":"Is my bar or restaurant already listed on AreaBands?","acceptedAnswer":{"@type":"Answer","text":"Possibly, yes. AreaBands maintains a free, continuously growing directory of independently-owned bars and restaurants, including many that haven't signed up yet. Search for your business name on the site to check, and claim your free listing if you find it."}},
+    {"@type":"Question","name":"How much does it cost for a venue to be listed on AreaBands?","acceptedAnswer":{"@type":"Answer","text":"A basic listing with your venue's name and address is always free. Publishing a live, self-updated show schedule costs $11.97 per month. Featured placement tiers (Center Stage, Stage Left, Stage Right, and equivalent tiers for venues without live music) are optional upgrades with separate pricing, limited per zip code."}},
+    {"@type":"Question","name":"Can a venue cancel their AreaBands listing at any time?","acceptedAnswer":{"@type":"Answer","text":"Yes. Any paid tier can be cancelled at any time, and the venue's free basic listing (name and address) remains in place at no cost unless the owner specifically requests to be removed entirely."}},
+    {"@type":"Question","name":"What if my bar doesn't have live music?","acceptedAnswer":{"@type":"Answer","text":"AreaBands lists independently-owned bars and restaurants whether or not they host live music. Venues without live music are listed for free and can optionally upgrade to a featured local-bar placement to stand out from corporate chains, separate from the live-music featured tiers."}},
+    {"@type":"Question","name":"What does Center Stage mean and how is it different from Stage Left or Stage Right?","acceptedAnswer":{"@type":"Answer","text":"Center Stage, Stage Left, and Stage Right are featured placement tiers that determine how prominently a venue's live show appears on the page. Center Stage is the single most prominent placement per zip code. Stage Left and Stage Right are smaller featured placements, limited to a fixed number of venues per zip code so placement stays meaningful rather than unlimited."}},
+    {"@type":"Question","name":"Is AreaBands available outside of Florida?","acceptedAnswer":{"@type":"Answer","text":"AreaBands is built to work anywhere in the United States and is expanding market by market. Any venue in any city can create a free listing regardless of location."}},
+    {"@type":"Question","name":"How do I remove my venue from AreaBands?","acceptedAnswer":{"@type":"Answer","text":"Venue owners can request removal at any time at no cost, no questions asked. There is no penalty or obligation for choosing not to be listed."}},
+    {"@type":"Question","name":"Why does AreaBands focus on independently-owned venues?","acceptedAnswer":{"@type":"Answer","text":"AreaBands was built specifically to help small, locally-owned bars and restaurants compete for visibility against larger corporate chains, which is why the platform is centered on independent ownership rather than franchise or chain locations."}}
+  ]
+}
+</script>
+</head>
+<body>
+
+<div class="header">
+  <img class="brand-logo" src="assets/areabands-header.svg" alt="AreaBands">
+  <div class="tagline">Local bars. Live bands. Good times.</div>
+  <p>No corporate crap.</p>
+  <nav>
+    <a href="index.html">Tonight's Lineup</a> &middot;
+    <a href="signup.html">List Your Venue</a> &middot;
+    <a href="login.html">Venue Login</a>
+  </nav>
+</div>
+
+<div class="wrap">
+
+  <h1>Live Music Is Happening Near You Right Now — Here's How to Actually Find It</h1>
+  <p class="lede">Somewhere within a few miles of you, tonight, a band is setting up. A bartender is wiping down the bar for a Thursday-night regular crowd. A singer nobody's heard of yet is doing a sound check in a room that seats forty people. Almost none of that shows up when you search for it — and that's the actual problem AreaBands was built to solve.</p>
+
+  <h2>Why Finding Live Music Shouldn't Be This Hard</h2>
+  <p>Search "live music near me" on any given night and you'll get one of three results: a giant ticketed arena show three weeks out, a generic events aggregator with stale listings from six months ago, or an app that demands a download, an account, and a login just to see who's playing at the bar down the street tonight. None of that answers the actual question — <strong>who's playing, where, and starting when, tonight, near me.</strong></p>
+  <p>Local venues run on thin margins and thinner marketing budgets. The bar owner booking a three-piece cover band for Friday night isn't paying an agency to get that show onto Google. So it just... doesn't show up anywhere. The show happens, twenty regulars show up, and everyone who would have loved to be there never even knew it existed.</p>
+  <p>Meanwhile, the venues that <em>do</em> show up in search results tend to be the same handful of large, corporate-backed rooms with real marketing budgets — which quietly pushes independent, family-owned bars further and further out of view, even though they're the ones actually keeping a live music scene alive night after night.</p>
+
+  <h2>What AreaBands Actually Is</h2>
+  <p>AreaBands is a free, location-based directory of live music and local bars, built around one simple idea: <strong>the venue itself is the best source of truth for what's happening on its own stage tonight</strong> — not a third party guessing, not a scraped calendar from last spring, not an app store listing. Venue owners update their own show schedule directly, and it goes live immediately. No middleman, no delay, no outdated info.</p>
+  <p>It works the other way too. Every independently-owned bar and restaurant in the database — whether they host live music tonight, once a month, or never — gets a free listing with their name and address, findable by anyone searching or browsing nearby. Live music is one layer on top of a much bigger idea: <strong>a real, comprehensive directory of local, independently-owned places</strong>, not just the ones with a band booked tonight.</p>
+
+  <h2>How It Works for Music Fans</h2>
+  <ul>
+    <li><strong>No app, no account, no download.</strong> Open it in any browser, on any device.</li>
+    <li><strong>Tap "Use My Location"</strong> and see what's playing near you tonight, sorted by distance.</li>
+    <li><strong>Or type in an address</strong> — a hotel, a friend's neighborhood, wherever you actually are — if you'd rather not share your exact location.</li>
+    <li><strong>Browse by day.</strong> Tonight, tomorrow, or scroll ahead through the week.</li>
+    <li><strong>Everything updates in real time</strong>, straight from the venue, so what you see is what's actually happening.</li>
+  </ul>
+
+  <h2>Every Bar Has a Story — Not Just the Ones With a Band Tonight</h2>
+  <p>Not every great local bar has live music every night, and plenty of genuinely excellent, family-run places never will. AreaBands treats that as worth listing too. A free basic listing exists for exactly this reason — so that "the best dive bar in town" and "the place with a great cover band on Fridays" can both be found in the same search, on equal footing, without either one having to pretend to be something it isn't.</p>
+
+  <h2>Why We Built This Around Supporting Local, Not Corporate Chains</h2>
+  <p>Independently-owned bars and restaurants are, by a wide margin, harder to find online than chains with dedicated marketing departments. That's not a coincidence — it's a structural disadvantage that has nothing to do with the quality of the food, the music, or the experience, and everything to do with who has the budget to show up first in a search result. AreaBands exists to correct that lopsidedness, even in a small way: every independently-owned venue gets the same free starting point, regardless of budget, and the featured placement tiers exist specifically to help a small local business compete for visibility the same way a national chain already can.</p>
+
+  <div class="callout">
+    <strong>Own a bar, restaurant, or a place that has live music?</strong> There's a real chance your venue is already sitting in the AreaBands directory for free right now, added as part of building out the most complete local directory possible. Search for your business, claim it if it's already there, or list it fresh if it isn't. <a class="cta-inline" href="signup.html">Check &amp; List Your Venue</a>
+  </div>
+
+  <h2>How Featured Placement Works</h2>
+  <p>A basic listing (name and address) is always free, forever, for any independently-owned venue. Beyond that, there are optional upgrades — deliberately capped per zip code, so featured placement stays meaningful instead of turning into unlimited paid noise:</p>
+
+  <h3>For venues with live music</h3>
+  <table>
+    <tr><th>Tier</th><th>What it does</th><th>Availability</th></tr>
+    <tr><td>Regular Listing</td><td>Self-updated live show schedule</td><td>Unlimited</td></tr>
+    <tr><td>Stage Left / Right — Secondary</td><td>Smaller featured placement</td><td>1 each per zip code</td></tr>
+    <tr><td>Stage Left / Right — Primary</td><td>Larger featured placement</td><td>1 each per zip code</td></tr>
+    <tr><td>Center Stage</td><td>Top, most prominent placement</td><td>1 per zip code</td></tr>
+  </table>
+
+  <h3>For venues without live music</h3>
+  <table>
+    <tr><th>Tier</th><th>What it does</th><th>Availability</th></tr>
+    <tr><td>Free Listing</td><td>Name and address, always free</td><td>Unlimited</td></tr>
+    <tr><td>City Left / City Right</td><td>Featured local-bar placement</td><td>1 each per zip code</td></tr>
+    <tr><td>Premier Listing</td><td>Top local-bar placement</td><td>1 per zip code</td></tr>
+  </table>
+
+  <h2>The Technology Behind It</h2>
+  <p>AreaBands is built so that both people and machines can find the answer to "what's happening near me tonight" without friction. That means real structured data behind every page — the same kind of behind-the-scenes markup that lets a voice assistant answer a spoken question directly, or lets a search engine pull a straight answer into its results instead of just a blue link. The goal isn't just to be visible to a person scrolling a search results page — it's to be a source a voice assistant, an AI search tool, or a search engine can confidently pull a real, current answer from, because the underlying data is genuinely current, not scraped and stale.</p>
+  <p>In practice, that means: clean semantic structure, a live, self-updating dataset instead of a static list, and structured FAQ data (the same section below) marked up specifically so search engines and AI assistants can surface these exact answers directly, in front of the person asking, without them needing to click through first.</p>
+
+  <h2>Frequently Asked Questions</h2>
+
+  <div class="faq-group">
+  <h3>For Music Fans</h3>
+
+  <div class="faq-item"><div class="q">Is AreaBands free to use for finding live music?</div><div class="a">Yes. Browsing listings, using your location to find shows tonight, and viewing any venue's schedule is completely free, with no account, login, or app download required.</div></div>
+
+  <div class="faq-item"><div class="q">Do I need to download an app?</div><div class="a">No. AreaBands runs in your phone or computer's web browser. There's nothing to download and no storage space used on your device.</div></div>
+
+  <div class="faq-item"><div class="q">How do I find live music near me right now?</div><div class="a">Tap "Use My Location" to see shows tonight sorted by distance, or type in an address, hotel name, or zip code if you'd rather not share your exact location.</div></div>
+
+  <div class="faq-item"><div class="q">How accurate is the schedule?</div><div class="a">Venues update their own schedules directly, and changes go live immediately — there's no third party in the middle guessing or working from outdated information.</div></div>
+
+  <div class="faq-item"><div class="q">Can I see what's happening tomorrow, or later this week?</div><div class="a">Yes — the day picker lets you browse tonight, tomorrow, and the days ahead, not just right now.</div></div>
+
+  <div class="faq-item"><div class="q">What if a venue doesn't have a paid schedule yet?</div><div class="a">Free-tier venues still show up in the directory with their name and address, and if something's happening there tonight, you'll see a subtle flag letting you know — even before they've published a full schedule.</div></div>
+
+  <div class="faq-item"><div class="q">Does AreaBands cover my city?</div><div class="a">AreaBands is expanding market by market across the United States. If your city isn't fully populated yet, it's likely coming — and any venue in any city can already create a free listing today.</div></div>
+
+  <div class="faq-item"><div class="q">Do I have to create an account to browse?</div><div class="a">No — browsing, searching, and viewing schedules never requires an account. Accounts are only needed by venue owners managing their own listing.</div></div>
+  </div>
+
+  <div class="faq-group">
+  <h3>For Venue Owners &amp; Bar Managers</h3>
+
+  <div class="faq-item"><div class="q">Is my bar or restaurant already listed?</div><div class="a">Possibly, yes. AreaBands maintains a continuously growing free directory of independently-owned bars and restaurants, including many added before the owner ever signed up. Search for your business name to check, and claim it for free if you find it.</div></div>
+
+  <div class="faq-item"><div class="q">Why is my business listed if I never signed up for anything?</div><div class="a">A free, name-and-address-only listing doesn't require sign-up — it's part of building the most complete local directory possible. Nothing about a free listing costs anything or obligates you to anything. You're welcome to claim it, ignore it, or request removal at any time.</div></div>
+
+  <div class="faq-item"><div class="q">How much does it cost to be listed?</div><div class="a">A basic listing (name and address) is always free. Publishing a live, self-updated show schedule is $11.97/month. Featured placement tiers are optional, separately priced upgrades, capped per zip code.</div></div>
+
+  <div class="faq-item"><div class="q">What's the difference between Center Stage, Stage Left, and Stage Right?</div><div class="a">These are featured placement tiers controlling how prominently your live show appears. Center Stage is the single most visible placement in your zip code. Stage Left and Stage Right are smaller featured placements, limited to a fixed number of venues per zip code so the placement stays meaningful.</div></div>
+
+  <div class="faq-item"><div class="q">What if my venue doesn't have live music at all?</div><div class="a">You're still welcome, and still free. Independently-owned bars and restaurants without live music get the same free basic listing, with an optional local-bar featured placement (Premier Listing, City Left, City Right) completely separate from the live-music tiers.</div></div>
+
+  <div class="faq-item"><div class="q">Can I cancel at any time?</div><div class="a">Yes, any paid tier can be cancelled whenever you want, and your free basic listing stays in place afterward unless you specifically ask to be removed.</div></div>
+
+  <div class="faq-item"><div class="q">How do I update my show schedule?</div><div class="a">Once you've claimed your listing and activated the schedule feature, you manage it yourself from your own dashboard — add, edit, or remove shows any time, with changes going live immediately.</div></div>
+
+  <div class="faq-item"><div class="q">What is zip-code exclusivity and why does it matter?</div><div class="a">Featured placement tiers are capped per zip code (for example, only one Center Stage slot per zip) so that paying for prominent placement actually means something, instead of being an unlimited tier anyone can buy into.</div></div>
+
+  <div class="faq-item"><div class="q">Do you require a long-term contract?</div><div class="a">No long-term contract is required for standard tiers. Some top-tier exclusive placements may carry a minimum commitment specifically because of their limited, one-per-zip-code availability — full details are shown before you ever commit to anything.</div></div>
+
+  <div class="faq-item"><div class="q">How do I remove my venue from the directory entirely?</div><div class="a">Reach out any time and it will be removed at no cost, no questions asked — there is never a penalty for choosing not to be listed.</div></div>
+
+  <div class="faq-item"><div class="q">Is this only for bars, or do restaurants qualify too?</div><div class="a">Both. Any independently-owned bar, restaurant, or venue — whether it hosts live music or not — is welcome in the directory.</div></div>
+
+  <div class="faq-item"><div class="q">My band plays there once a month — does the venue still qualify?</div><div class="a">Yes. There's no minimum frequency requirement. A venue that hosts live music once a month is exactly as welcome as one that hosts it every night.</div></div>
+  </div>
+
+  <div class="faq-group">
+  <h3>Trust, Data &amp; How This All Works</h3>
+
+  <div class="faq-item"><div class="q">Where does the venue data come from?</div><div class="a">A combination of publicly available business information used to build out the broadest possible free directory, and direct self-reporting from venue owners who've claimed and manage their own listing.</div></div>
+
+  <div class="faq-item"><div class="q">What information do you collect about a listed business?</div><div class="a">Only business-level information — name and address — for a free listing. Nothing personal, and nothing beyond what's already publicly associated with the business itself.</div></div>
+
+  <div class="faq-item"><div class="q">Is AreaBands connected to any corporate ticketing or events company?</div><div class="a">No. AreaBands is independently built and specifically focused on supporting independently-owned local venues, not corporate or chain locations.</div></div>
+
+  <div class="faq-item"><div class="q">Why does the site mention voice search and AI assistants?</div><div class="a">Because that's genuinely part of how this is built — the site's data is structured so that voice assistants and AI search tools can pull accurate, current answers about local live music and venues directly, not just so a person scrolling a search page can find a link.</div></div>
+  </div>
+
+  <div class="callout">
+    <strong>Ready to check if you're already listed?</strong> Search for your bar, restaurant, or venue and see what's there — claiming it costs nothing. <a class="cta-inline" href="signup.html">List Your Venue Free</a>
+  </div>
+
+  <p style="margin-top:30px"><a href="index.html">&larr; Back to tonight's lineup</a></p>
+
+</div>
+
+<footer>
+  AreaBands &middot; Local bars. Live bands. Good times. No corporate crap.<br>
+  <a href="index.html">Tonight's Lineup</a> &middot; <a href="signup.html">List Your Venue</a> &middot; <a href="login.html">Venue Login</a>
+</footer>
+
+</body>
+</html>
