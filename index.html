@@ -73,6 +73,9 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .wing-card .time{font-family:var(--font-display);font-size:12px;color:var(--orange)}
 .tonight-flag{display:inline-block;font-size:11px;font-weight:700;color:var(--pink);margin-left:6px}
 @media (max-width:420px){.wings{grid-template-columns:1fr}}
+.offer-badge{display:block;margin-top:6px;font-family:var(--font-display);font-size:12px;background:var(--pink);color:var(--cream);border:none;padding:5px 12px;border-radius:20px;cursor:pointer}
+.offer-reveal{display:none;margin-top:6px;font-size:12.5px;font-weight:600;color:var(--plum-deep);background:var(--cream);border:2px dashed var(--pink);border-radius:6px;padding:8px 10px}
+.offer-reveal.shown{display:block}
 
 .directory{padding:8px 18px 40px}
 .directory h2{font-family:var(--font-display);font-weight:400;font-size:18px;color:var(--plum);margin-bottom:10px}
@@ -213,15 +216,50 @@ function renderPicker() {
   });
 }
 
+let offersByVenue = {};
+
 function cardHTML(show) {
+  const offer = offersByVenue[show.venue_id];
   return `
     <div class="venue">${show.venues?.name ?? "Venue"}</div>
     <div class="city">${show.venues?.city ?? ""}</div>
     ${distanceLabel(show.venues)}
     <div class="band">${show.band_name}</div>
     <div class="time">${fmtTime(show.start_time)}</div>
+    ${offer ? `
+      <button class="offer-badge" data-venue-id="${show.venue_id}">&#127903; Special Offer</button>
+      <div class="offer-reveal" data-venue-id="${show.venue_id}">${offer}</div>
+    ` : ""}
   `;
 }
+
+// Best-effort visit tracking + offer claim logging -- these never block the
+// page and a failure here should never be visible to the person browsing.
+function logVenueViews(venueIds) {
+  const unique = [...new Set(venueIds)].filter(Boolean);
+  unique.forEach((venue_id) => {
+    client.from("venue_views").insert({ venue_id }).then(() => {}, () => {});
+  });
+}
+
+async function loadOffers(venueIds) {
+  const unique = [...new Set(venueIds)].filter(Boolean);
+  offersByVenue = {};
+  if (!unique.length) return;
+  const { data } = await client.from("venue_offers").select("venue_id, offer_text").in("venue_id", unique);
+  (data || []).forEach((o) => { offersByVenue[o.venue_id] = o.offer_text; });
+}
+
+document.getElementById("list").addEventListener("click", (e) => {
+  const btn = e.target.closest(".offer-badge");
+  if (!btn) return;
+  const venueId = btn.dataset.venueId;
+  const reveal = document.querySelector(`.offer-reveal[data-venue-id="${venueId}"]`);
+  if (reveal && !reveal.classList.contains("shown")) {
+    reveal.classList.add("shown");
+    client.from("offer_claims").insert({ venue_id: venueId }).then(() => {}, () => {});
+  }
+});
 
 async function loadShows() {
   const listEl = document.getElementById("list");
@@ -229,7 +267,7 @@ async function loadShows() {
 
   const { data, error } = await client
     .from("shows")
-    .select("band_name, start_time, notes, venues(name, city, tier, lat, lng)")
+    .select("venue_id, band_name, start_time, notes, venues(name, city, tier, lat, lng)")
     .eq("show_date", selected)
     .order("start_time", { ascending: true });
 
@@ -242,6 +280,8 @@ async function loadShows() {
     listEl.innerHTML = '<div class="empty">No live music posted for this day yet.</div>';
     return;
   }
+
+  await loadOffers(data.map((s) => s.venue_id));
 
   if (userLoc) {
     data.sort((a, b) => {
@@ -275,6 +315,7 @@ async function loadShows() {
   html += regular.map((s) => `<div class="card">${cardHTML(s)}</div>`).join("");
 
   listEl.innerHTML = html || '<div class="empty">No live music posted for this day yet.</div>';
+  logVenueViews(data.map((s) => s.venue_id));
 }
 
 async function loadDirectory() {
