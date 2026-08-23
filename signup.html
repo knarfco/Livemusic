@@ -35,6 +35,12 @@ button{width:100%;padding:12px;border:2px solid #2B1331;border-radius:4px;backgr
 .error{color:#E63B7A;font-size:13px;margin-top:12px;min-height:16px;font-weight:600}
 .done{display:none;font-size:14px;line-height:1.5;font-weight:500}
 .done strong{color:#F4622D}
+.claim{display:none;font-size:14px;line-height:1.5;font-weight:500}
+.claim .venue-card{background:#fff;border:2px solid var(--gold,#F4B942);border-radius:6px;padding:12px 14px;margin:14px 0}
+.claim .venue-card strong{color:#2B1331;font-size:15px}
+.claim-actions{display:flex;gap:10px;margin-top:16px}
+.claim-actions button{flex:1;width:auto}
+button.secondary{background:#fff;color:#2B1331}
 </style>
 </head>
 <body>
@@ -59,6 +65,17 @@ button{width:100%;padding:12px;border:2px solid #2B1331;border-radius:4px;backgr
       <button type="submit">Create My Login</button>
       <div class="error" id="err"></div>
     </form>
+  </div>
+  <div class="claim" id="claimWrap">
+    <div class="brand-wordmark">AreaBands</div>
+    <h1>Is This You?</h1>
+    <p>We already have a free listing that looks like a match in this zip code.</p>
+    <div class="venue-card" id="claimCard"></div>
+    <div class="claim-actions">
+      <button type="button" class="secondary" id="claimNo">No, list fresh</button>
+      <button type="button" id="claimYes">Yes, that's me</button>
+    </div>
+    <div class="error" id="claimErr"></div>
   </div>
   <div class="done" id="done">
     <p style="margin-bottom:10px"><strong>You're set — and you're already listed, free.</strong></p>
@@ -86,6 +103,68 @@ function slugify(name, suffix) {
   return `${base}-${suffix}`;
 }
 
+// Loose match on purpose -- this only has to surface a candidate for the
+// person to confirm "is this you?", not decide anything on its own.
+function normalizeForMatch(name) {
+  return name.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
+}
+function nameLooksLikeMatch(typedName, candidateName) {
+  const typed = new Set(normalizeForMatch(typedName));
+  const candidate = new Set(normalizeForMatch(candidateName));
+  let shared = 0;
+  for (const word of typed) if (candidate.has(word)) shared++;
+  return shared >= Math.min(typed.size, candidate.size) * 0.6;
+}
+
+async function findClaimableVenue(venueName, zipCode) {
+  const { data } = await client.from("venues")
+    .select("id,name,address,city,zip_code")
+    .is("owner_user_id", null)
+    .eq("zip_code", zipCode);
+  return (data || []).find((v) => nameLooksLikeMatch(venueName, v.name)) || null;
+}
+
+async function createNewVenue(venueName, address, city, zipCode, ownerId) {
+  const slug = slugify(venueName, ownerId.slice(0, 6));
+  const coords = await geocode(`${address}, ${city}, FL`);
+  await client.from("venues").insert({
+    name: venueName, address, city, zip_code: zipCode, slug, owner_user_id: ownerId, is_active: false,
+    lat: coords?.lat ?? null, lng: coords?.lng ?? null,
+  });
+}
+
+async function finishSignup(pending, claimVenueId) {
+  const { venueName, address, city, zipCode, email, password } = pending;
+  const { data, error } = await client.auth.signUp({
+    email, password,
+    options: { data: { pending_venue_name: venueName, pending_venue_address: address, pending_venue_city: city, pending_venue_zip: zipCode } },
+  });
+
+  if (error) {
+    return error.message || "Something went wrong creating your login.";
+  }
+
+  if (data.session) {
+    // Email confirmation is off for this project — session exists immediately,
+    // so finish the venue row right now.
+    if (claimVenueId) {
+      await client.from("venues").update({ owner_user_id: data.user.id }).eq("id", claimVenueId);
+    } else {
+      await createNewVenue(venueName, address, city, zipCode, data.user.id);
+    }
+  }
+  // If there's no session yet, email confirmation is required — dashboard.html
+  // will finish creating the venue automatically the first time they log in,
+  // using the pending_venue_name/city stored above (claiming isn't handled on
+  // that path since we don't know yet whether they confirmed a match here).
+
+  document.getElementById("formWrap").style.display = "none";
+  document.getElementById("claimWrap").style.display = "none";
+  document.getElementById("done").style.display = "block";
+}
+
+let pendingSignup = null;
+
 document.getElementById("signupForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const venueName = document.getElementById("venueName").value.trim();
@@ -97,32 +176,34 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
   const errEl = document.getElementById("err");
   errEl.textContent = "";
 
-  const { data, error } = await client.auth.signUp({
-    email, password,
-    options: { data: { pending_venue_name: venueName, pending_venue_address: address, pending_venue_city: city, pending_venue_zip: zipCode } },
-  });
+  pendingSignup = { venueName, address, city, zipCode, email, password };
 
-  if (error) {
-    errEl.textContent = error.message || "Something went wrong creating your login.";
+  const match = await findClaimableVenue(venueName, zipCode);
+  if (match) {
+    document.getElementById("claimCard").innerHTML =
+      `<strong>${match.name}</strong><br>${match.address || ""} ${match.city || ""}`.trim();
+    pendingSignup.claimVenueId = match.id;
+    document.getElementById("formWrap").style.display = "none";
+    document.getElementById("claimWrap").style.display = "block";
     return;
   }
 
-  if (data.session) {
-    // Email confirmation is off for this project — session exists immediately,
-    // so create the venue row right now.
-    const slug = slugify(venueName, data.user.id.slice(0, 6));
-    const coords = await geocode(`${address}, ${city}, FL`);
-    await client.from("venues").insert({
-      name: venueName, address, city, zip_code: zipCode, slug, owner_user_id: data.user.id, is_active: false,
-      lat: coords?.lat ?? null, lng: coords?.lng ?? null,
-    });
-  }
-  // If there's no session yet, email confirmation is required — dashboard.html
-  // will finish creating the venue automatically the first time they log in,
-  // using the pending_venue_name/city stored above.
+  const err = await finishSignup(pendingSignup, null);
+  if (err) errEl.textContent = err;
+});
 
-  document.getElementById("formWrap").style.display = "none";
-  document.getElementById("done").style.display = "block";
+document.getElementById("claimYes").addEventListener("click", async () => {
+  const errEl = document.getElementById("claimErr");
+  errEl.textContent = "";
+  const err = await finishSignup(pendingSignup, pendingSignup.claimVenueId);
+  if (err) errEl.textContent = err;
+});
+
+document.getElementById("claimNo").addEventListener("click", async () => {
+  const errEl = document.getElementById("claimErr");
+  errEl.textContent = "";
+  const err = await finishSignup(pendingSignup, null);
+  if (err) errEl.textContent = err;
 });
 </script>
 </body>

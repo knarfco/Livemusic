@@ -1,0 +1,166 @@
+# One chain brand name per line, case-insensitive. Matched as a normalized
+# substring against every listing's name -- see chain_detect.py.
+# Lines starting with # are ignored. This is meant to be edited freely over
+# time; it does not need code changes to grow.
+
+mcdonald's
+mcdonalds
+burger king
+wendy's
+wendys
+taco bell
+kfc
+kentucky fried chicken
+popeyes
+chick-fil-a
+chick fil a
+zaxby's
+zaxbys
+bojangles
+sonic drive-in
+sonic drive in
+whataburger
+in-n-out
+in n out
+five guys
+shake shack
+culver's
+culvers
+steak 'n shake
+steak n shake
+white castle
+carl's jr
+carls jr
+hardee's
+hardees
+jack in the box
+del taco
+el pollo loco
+raising cane's
+raising canes
+wingstop
+buffalo wild wings
+hooters
+twin peaks
+applebee's
+applebees
+chili's
+chilis
+tgi friday's
+tgi fridays
+ruby tuesday
+outback steakhouse
+bonefish grill
+carrabba's
+carrabbas
+longhorn steakhouse
+texas roadhouse
+olive garden
+red lobster
+cracker barrel
+denny's
+dennys
+ihop
+waffle house
+perkins
+bob evans
+golden corral
+old country buffet
+ponderosa
+sizzler
+black angus
+bj's restaurant
+bjs restaurant
+yard house
+dave & buster's
+dave and buster's
+chuck e cheese
+panera bread
+panera
+starbucks
+dunkin
+dunkin' donuts
+tim hortons
+peet's coffee
+peets coffee
+caribou coffee
+domino's
+dominos
+pizza hut
+papa john's
+papa johns
+little caesars
+subway
+jimmy john's
+jimmy johns
+firehouse subs
+jersey mike's
+jersey mikes
+quiznos
+potbelly
+chipotle
+qdoba
+moe's southwest grill
+moes southwest grill
+panda express
+pei wei
+pf chang's
+pf changs
+noodles & company
+noodles and company
+red robin
+fuddruckers
+smashburger
+checkers
+rally's
+rallys
+world of beer
+miller's ale house
+millers ale house
+duffy's sports grill
+duffys sports grill
+beef o'brady's
+beef obradys
+brass tap
+yard house
+first watch
+another broken egg
+huddle house
+tijuana flats
+pdq
+zoe's kitchen
+zoes kitchen
+corner bakery
+au bon pain
+einstein bros bagels
+krispy kreme
+baskin robbins
+cold stone creamery
+dairy queen
+tcby
+menchie's
+menchies
+applebees grill
+ruby's diner
+rubys diner
+village inn
+international house of pancakes
+friendly's
+friendlys
+pizzeria uno
+uno pizzeria
+mellow mushroom
+cicis pizza
+cici's pizza
+peter piper pizza
+round table pizza
+marco's pizza
+marcos pizza
+hungry howie's
+hungry howies
+godfather's pizza
+godfathers pizza
+papa murphy's
+papa murphys
+blaze pizza
+mod pizza
