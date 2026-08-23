@@ -112,11 +112,18 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .claim-footer{background:var(--plum-deep);padding:22px 20px 28px;text-align:center}
 .footer-buttons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
 .footer-btn{
-  font-family:var(--font-display);font-size:14px;letter-spacing:.02em;
-  border:2px solid var(--plum-deep);padding:9px 16px;border-radius:20px;cursor:pointer;
-  text-decoration:none;display:inline-block
+  position:relative;font-family:var(--font-display);font-size:14px;letter-spacing:.02em;
+  border:2px solid var(--gold);padding:9px 16px;border-radius:20px;cursor:pointer;
+  text-decoration:none;display:inline-block;background:var(--plum-deep)
 }
-.footer-btn{background:var(--gold);color:var(--plum-deep)}
+.blob-text{
+  background-color:var(--gold);
+  background-image:
+    radial-gradient(circle 15px at var(--b1x,20%) var(--b1y,50%), #F4B942, #F4B942 55%, transparent 95%),
+    radial-gradient(circle 15px at var(--b2x,50%) var(--b2y,50%), #F4622D, #F4622D 55%, transparent 95%),
+    radial-gradient(circle 15px at var(--b3x,80%) var(--b3y,50%), #E63B7A, #E63B7A 55%, transparent 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
 .embed-box{display:none;margin-top:16px;text-align:left;max-width:320px;margin-left:auto;margin-right:auto}
 .embed-box.shown{display:block}
 .embed-box input{width:100%;padding:8px 10px;border-radius:6px;border:2px solid var(--gold);font-family:var(--font-body);font-size:13px;margin-bottom:8px}
@@ -164,10 +171,10 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 </div>
 <div class="claim-footer">
   <div class="footer-buttons">
-    <a class="footer-btn" href="about.html">What is AreaBands?</a>
-    <a class="footer-btn" href="for-venues.html">Own a Bar or Venue?</a>
-    <a class="footer-btn" href="login.html">Venue Sign In</a>
-    <button class="footer-btn" id="toggleEmbed">Embed Our Widget</button>
+    <a class="footer-btn" href="about.html"><span class="blob-text">What is AreaBands?</span></a>
+    <a class="footer-btn" href="for-venues.html"><span class="blob-text">Own a Bar or Venue?</span></a>
+    <a class="footer-btn" href="login.html"><span class="blob-text">Venue Sign In</span></a>
+    <button class="footer-btn" id="toggleEmbed"><span class="blob-text">Embed Our Widget</span></button>
   </div>
   <div class="embed-box" id="embedBox">
     <input type="text" id="embedCityInput" placeholder="Your city or zip">
@@ -177,6 +184,80 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
     <div class="embed-status" id="embedStatus"></div>
   </div>
 </div>
+
+<script>
+// Lava-lamp blob buttons: purely decorative, so this runs standalone and
+// never depends on Supabase/the rest of the app -- if the CDN hiccups for
+// a visitor, this still works, and .blob-text's solid gold background-color
+// is the fallback if this script itself fails for any reason (the button
+// stays readable, just without the moving color). The blob "shapes" are
+// three radial-gradient layers on the text's own background, revealed only
+// inside the letters via background-clip:text -- the same trick already
+// used for the AreaBands wordmark, just with the gradient centers driven
+// by JS every frame instead of sitting still.
+(function initBlobButtons() {
+  const blobSets = [];
+
+  const R = 15;
+  document.querySelectorAll(".blob-text").forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    // The travel box has to comfortably fit 3 non-overlapping blobs even
+    // when the real text is short/thin (a 14px line is only ~15px tall,
+    // smaller than a naive blob radius) -- floor it so the bounce range
+    // is never inverted. Anything outside the actual glyphs just never
+    // shows, since background-clip:text only reveals color inside letters.
+    const w = Math.max(rect.width || 0, R * 6 + 20);
+    const h = Math.max(rect.height || 0, R * 2 + 8);
+    const blobs = ["b1", "b2", "b3"].map((name, i) => ({
+      name,
+      r: R,
+      x: (w / 4) * (i + 1),
+      y: h / 2,
+      vx: (Math.random() - 0.5) * 0.6 || 0.3,
+      vy: (Math.random() - 0.5) * 0.6 || 0.3,
+    }));
+    blobSets.push({ el, w, h, blobs });
+  });
+
+  function step() {
+    blobSets.forEach(({ el, w, h, blobs }) => {
+      // Pairwise collision -- push apart and swap velocities so no two
+      // blobs' colors ever overlap/touch.
+      for (let i = 0; i < blobs.length; i++) {
+        for (let j = i + 1; j < blobs.length; j++) {
+          const a = blobs[i], b = blobs[j];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          const minDist = a.r + b.r + 4;
+          if (dist < minDist) {
+            const nx = dx / dist, ny = dy / dist;
+            const overlap = (minDist - dist) / 2;
+            a.x -= nx * overlap; a.y -= ny * overlap;
+            b.x += nx * overlap; b.y += ny * overlap;
+            const avx = a.vx, avy = a.vy;
+            a.vx = b.vx; a.vy = b.vy;
+            b.vx = avx; b.vy = avy;
+          }
+        }
+      }
+
+      blobs.forEach((blob) => {
+        blob.x += blob.vx;
+        blob.y += blob.vy;
+        if (blob.x - blob.r < 0) { blob.x = blob.r; blob.vx = Math.abs(blob.vx); }
+        if (blob.x + blob.r > w) { blob.x = w - blob.r; blob.vx = -Math.abs(blob.vx); }
+        if (blob.y - blob.r < 0) { blob.y = blob.r; blob.vy = Math.abs(blob.vy); }
+        if (blob.y + blob.r > h) { blob.y = h - blob.r; blob.vy = -Math.abs(blob.vy); }
+        el.style.setProperty(`--${blob.name}x`, `${blob.x}px`);
+        el.style.setProperty(`--${blob.name}y`, `${blob.y}px`);
+      });
+    });
+    requestAnimationFrame(step);
+  }
+
+  if (blobSets.length) requestAnimationFrame(step);
+})();
+</script>
 
 <script>
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
