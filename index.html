@@ -144,6 +144,28 @@ function fmtTime(t) {
 }
 
 let userLoc = null; // {lat, lng}
+const SEARCH_RADIUS_MILES = 50;
+
+// Rough box around a point so we can pre-filter in the database query
+// instead of pulling every venue nationwide just to sort client-side.
+// ~69 miles per degree of latitude; longitude degrees shrink with latitude.
+function boundingBox(lat, lng, radiusMiles) {
+  const latDelta = radiusMiles / 69;
+  const lngDelta = radiusMiles / (69 * Math.cos((lat * Math.PI) / 180));
+  return {
+    minLat: lat - latDelta, maxLat: lat + latDelta,
+    minLng: lng - lngDelta, maxLng: lng + lngDelta,
+  };
+}
+
+function gateHTML() {
+  return `
+    <div class="gate">
+      <div class="gate-title">Where are you?</div>
+      <p>Tap "Use My Location" above, or type your city or zip — that's how we know what's actually nearby instead of showing every venue in the country at once.</p>
+    </div>
+  `;
+}
 
 function haversineMiles(lat1, lng1, lat2, lng2) {
   const R = 3958.8;
@@ -273,12 +295,21 @@ document.getElementById("list").addEventListener("click", (e) => {
 
 async function loadShows() {
   const listEl = document.getElementById("list");
+  if (!userLoc) {
+    listEl.innerHTML = gateHTML();
+    return;
+  }
   listEl.innerHTML = '<div class="empty">Loading…</div>';
 
+  const box = boundingBox(userLoc.lat, userLoc.lng, SEARCH_RADIUS_MILES);
   const { data, error } = await client
     .from("shows")
-    .select("venue_id, band_name, start_time, notes, venues(name, city, tier, lat, lng)")
+    .select("venue_id, band_name, start_time, notes, venues!inner(name, city, tier, lat, lng)")
     .eq("show_date", selected)
+    .gte("venues.lat", box.minLat)
+    .lte("venues.lat", box.maxLat)
+    .gte("venues.lng", box.minLng)
+    .lte("venues.lng", box.maxLng)
     .order("start_time", { ascending: true });
 
   if (error) {
@@ -330,21 +361,29 @@ async function loadShows() {
 
 async function loadDirectory() {
   const dirEl = document.getElementById("directory");
+  if (!userLoc) {
+    dirEl.innerHTML = "";
+    return;
+  }
+
+  const box = boundingBox(userLoc.lat, userLoc.lng, SEARCH_RADIUS_MILES);
   const { data, error } = await client
     .from("venues")
     .select("id, name, city, is_active, lat, lng")
     .eq("is_active", false)
+    .gte("lat", box.minLat)
+    .lte("lat", box.maxLat)
+    .gte("lng", box.minLng)
+    .lte("lng", box.maxLng)
     .order("name", { ascending: true });
 
-  if (error || !data || data.length === 0) return;
+  if (error || !data || data.length === 0) { dirEl.innerHTML = ""; return; }
 
-  if (userLoc) {
-    data.sort((a, b) => {
-      const da = a.lat != null ? haversineMiles(userLoc.lat, userLoc.lng, a.lat, a.lng) : Infinity;
-      const db = b.lat != null ? haversineMiles(userLoc.lat, userLoc.lng, b.lat, b.lng) : Infinity;
-      return da - db;
-    });
-  }
+  data.sort((a, b) => {
+    const da = a.lat != null ? haversineMiles(userLoc.lat, userLoc.lng, a.lat, a.lng) : Infinity;
+    const db = b.lat != null ? haversineMiles(userLoc.lat, userLoc.lng, b.lat, b.lng) : Infinity;
+    return da - db;
+  });
 
   const { data: flags } = await client
     .from("public_show_flags")
