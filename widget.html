@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AreaBands Widget</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Boogaloo&family=Poppins:wght@400;500;600;700&display=swap');
+:root{
+  --plum:#2B1331; --plum-deep:#1C0C22;
+  --orange:#F4622D; --gold:#F4B942; --pink:#E63B7A; --teal:#1B6B6B;
+  --cream:#FDF3E7; --ink:#2B1331;
+  --font-display:'Boogaloo',cursive; --font-body:'Poppins',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--cream);color:var(--ink);font-family:var(--font-body)}
+.wrap{padding:12px 14px 10px;max-width:420px}
+.heading{font-family:var(--font-display);font-weight:400;font-size:17px;color:var(--plum-deep);margin-bottom:8px}
+.row{padding:8px 0;border-bottom:1px solid rgba(43,19,49,.12)}
+.row:last-of-type{border-bottom:none}
+.row .venue{font-family:var(--font-display);font-size:15px;color:var(--plum-deep)}
+.row .detail{font-size:12.5px;color:var(--ink);margin-top:1px}
+.row .detail.specials{color:var(--teal);font-weight:600}
+.empty{font-size:13px;color:var(--plum);opacity:.7;padding:6px 0}
+.credit{
+  display:block;margin-top:10px;padding-top:10px;border-top:2px solid var(--orange);
+  font-family:var(--font-display);font-size:13px;color:var(--orange);text-decoration:none
+}
+.credit:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="heading" id="heading">Nearby Tonight</div>
+  <div id="content"><div class="empty">Loading…</div></div>
+  <a class="credit" id="creditLink" href="index.html" target="_blank" rel="noopener">&#127908; Powered by AreaBands &mdash; see more &rarr;</a>
+</div>
+
+<script>
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const params = new URLSearchParams(location.search);
+const lat = parseFloat(params.get("lat"));
+const lng = parseFloat(params.get("lng"));
+const label = params.get("label");
+const intent = params.get("intent") || "both"; // 'bands' | 'bars' | 'both'
+const SEARCH_RADIUS_MILES = 30;
+
+if (label) {
+  document.getElementById("heading").textContent = `Nearby ${label} Tonight`;
+}
+document.getElementById("creditLink").href = "index.html?ref=widget";
+
+function fmtTime(t) {
+  if (!t) return "";
+  const [h, m] = t.split(":");
+  const hour = ((+h + 11) % 12) + 1;
+  const ampm = +h < 12 ? "AM" : "PM";
+  return `${hour}:${m} ${ampm}`;
+}
+function boundingBox(lat, lng, radiusMiles) {
+  const latDelta = radiusMiles / 69;
+  const lngDelta = radiusMiles / (69 * Math.cos((lat * Math.PI) / 180));
+  return { minLat: lat - latDelta, maxLat: lat + latDelta, minLng: lng - lngDelta, maxLng: lng + lngDelta };
+}
+
+async function load() {
+  const el = document.getElementById("content");
+  if (isNaN(lat) || isNaN(lng)) {
+    el.innerHTML = '<div class="empty">This widget needs a location to show anything nearby.</div>';
+    return;
+  }
+  const box = boundingBox(lat, lng, SEARCH_RADIUS_MILES);
+  const today = new Date().toISOString().slice(0, 10);
+  const rows = [];
+
+  if (intent === "bands" || intent === "both") {
+    const { data } = await client
+      .from("shows")
+      .select("band_name, start_time, venues!inner(name, lat, lng)")
+      .eq("show_date", today)
+      .gte("venues.lat", box.minLat).lte("venues.lat", box.maxLat)
+      .gte("venues.lng", box.minLng).lte("venues.lng", box.maxLng)
+      .order("start_time", { ascending: true })
+      .limit(5);
+    (data || []).forEach((s) => rows.push(`
+      <div class="row">
+        <div class="venue">${s.venues?.name ?? "Venue"}</div>
+        <div class="detail">${s.band_name} &mdash; ${fmtTime(s.start_time)}</div>
+      </div>
+    `));
+  }
+
+  if (intent === "bars" || intent === "both") {
+    const { data } = await client
+      .from("venue_specials")
+      .select("specials_text, venues!inner(name, lat, lng)")
+      .gte("venues.lat", box.minLat).lte("venues.lat", box.maxLat)
+      .gte("venues.lng", box.minLng).lte("venues.lng", box.maxLng)
+      .limit(5);
+    (data || []).forEach((s) => rows.push(`
+      <div class="row">
+        <div class="venue">${s.venues?.name ?? "Venue"}</div>
+        <div class="detail specials">${s.specials_text}</div>
+      </div>
+    `));
+  }
+
+  el.innerHTML = rows.length
+    ? rows.join("")
+    : '<div class="empty">No live shows or specials posted here yet &mdash; check back soon.</div>';
+}
+
+load();
+</script>
+</body>
+</html>

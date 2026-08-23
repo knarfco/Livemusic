@@ -112,6 +112,14 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .claim-footer{background:var(--plum-deep);padding:22px 20px 28px;text-align:center}
 .claim-footer p{color:var(--cream);opacity:.75;font-size:12.5px;margin-bottom:8px}
 .claim-footer a{font-family:var(--font-display);font-size:16px;color:var(--gold);text-decoration:underline}
+.claim-footer .embed-toggle{background:none;border:none;font-family:var(--font-display);font-size:16px;color:var(--gold);text-decoration:underline;cursor:pointer}
+.embed-box{display:none;margin-top:12px;text-align:left;max-width:320px;margin-left:auto;margin-right:auto}
+.embed-box.shown{display:block}
+.embed-box input{width:100%;padding:8px 10px;border-radius:6px;border:2px solid var(--gold);font-family:var(--font-body);font-size:13px;margin-bottom:8px}
+.embed-box button{font-family:var(--font-display);font-size:13px;background:var(--orange);color:var(--cream);border:2px solid var(--gold);padding:6px 14px;border-radius:6px;cursor:pointer;margin-bottom:8px}
+.embed-box textarea{display:none;width:100%;min-height:70px;font-size:11px;font-family:monospace;padding:8px;border-radius:6px;border:2px solid var(--gold);background:var(--cream);color:var(--plum-deep);margin-bottom:8px}
+.embed-box textarea.shown{display:block}
+.embed-status{font-size:11px;color:var(--gold);opacity:.85}
 </style>
 </head>
 <body>
@@ -156,6 +164,15 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
   <a href="about.html">Is this your business? See how listing works &rarr;</a>
   <p style="margin-top:14px">Already listed with us?</p>
   <a href="login.html">Sign in to update tonight's show &rarr;</a>
+  <p style="margin-top:14px">Run a local blog or site?</p>
+  <button class="embed-toggle" id="toggleEmbed">Add our live music widget to your site &rarr;</button>
+  <div class="embed-box" id="embedBox">
+    <input type="text" id="embedCityInput" placeholder="Your city or zip">
+    <button id="embedGoBtn">Generate Code</button>
+    <textarea id="embedCode" readonly onclick="this.select()"></textarea>
+    <button id="embedCopyBtn" style="display:none">Copy Code</button>
+    <div class="embed-status" id="embedStatus"></div>
+  </div>
 </div>
 
 <script>
@@ -275,6 +292,38 @@ document.getElementById("addressGoBtn").addEventListener("click", async () => {
   const loc = await geocode(q);
   if (!loc) { statusEl.textContent = "Couldn't find that address — try adding the city."; return; }
   setUserLoc(loc, `Showing what's closest to "${q}".`);
+});
+
+document.getElementById("toggleEmbed").addEventListener("click", () => {
+  document.getElementById("embedBox").classList.toggle("shown");
+});
+
+document.getElementById("embedGoBtn").addEventListener("click", async () => {
+  const q = document.getElementById("embedCityInput").value.trim();
+  const statusEl = document.getElementById("embedStatus");
+  const codeEl = document.getElementById("embedCode");
+  const copyBtn = document.getElementById("embedCopyBtn");
+  if (!q) return;
+  statusEl.textContent = "Looking that up…";
+  const loc = await geocode(q);
+  if (!loc) { statusEl.textContent = "Couldn't find that place — try a nearby city."; return; }
+  const code = `<iframe src="https://areabands.com/widget.html?lat=${loc.lat.toFixed(4)}&lng=${loc.lng.toFixed(4)}&label=${encodeURIComponent(q)}" width="340" height="360" style="border:2px solid #1C0C22;border-radius:8px" loading="lazy" title="Live music near ${q}, via AreaBands"></iframe>`;
+  codeEl.value = code;
+  codeEl.classList.add("shown");
+  copyBtn.style.display = "inline-block";
+  statusEl.textContent = "Paste this anywhere on your site — it's yours, no permission needed.";
+});
+
+document.getElementById("embedCopyBtn").addEventListener("click", async () => {
+  const codeEl = document.getElementById("embedCode");
+  const statusEl = document.getElementById("embedStatus");
+  try {
+    await navigator.clipboard.writeText(codeEl.value);
+  } catch (e) {
+    codeEl.select();
+    document.execCommand("copy");
+  }
+  statusEl.textContent = "Copied!";
 });
 
 const days = Array.from({ length: 7 }, (_, i) => {

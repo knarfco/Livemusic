@@ -68,9 +68,18 @@ th,td{text-align:left;padding:9px 10px;border-bottom:1px solid rgba(43,19,49,.15
 th{font-family:var(--font-display);font-weight:400;color:var(--teal);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
 
 .faq-group h3{margin-top:34px;font-size:20px;color:var(--pink);border-bottom:2px dashed rgba(43,19,49,.15);padding-bottom:6px}
-.faq-item{margin-bottom:18px}
-.faq-item .q{font-family:var(--font-display);font-weight:400;font-size:16.5px;color:var(--plum-deep);margin-bottom:4px}
-.faq-item .a{font-size:14.5px;color:var(--ink)}
+.faq-item{border-bottom:1px solid rgba(43,19,49,.12)}
+.faq-item .q{
+  font-family:var(--font-display);font-weight:400;font-size:16.5px;color:var(--plum-deep);
+  padding:14px 30px 14px 0;position:relative;cursor:pointer;margin-bottom:0
+}
+.faq-item .q::after{
+  content:"+";position:absolute;right:4px;top:12px;
+  font-family:var(--font-body);font-weight:700;font-size:19px;color:var(--pink)
+}
+.faq-item.open .q::after{content:"\2212"}
+.faq-item .a{font-size:14.5px;color:var(--ink);max-height:0;overflow:hidden;transition:max-height .25s ease}
+.faq-item.open .a{max-height:400px;padding-bottom:14px}
 
 footer{background:var(--plum-deep);color:var(--cream);text-align:center;padding:30px 20px;font-size:12.5px;opacity:.8}
 footer a{color:var(--gold)}
@@ -247,6 +256,14 @@ footer a{color:var(--gold)}
   AreaBands &middot; Bars. Bands. Nearby.<br>
   <a href="index.html">Tonight's Lineup</a> &middot; <a href="signup.html">List Your Venue</a> &middot; <a href="login.html">Venue Login</a>
 </footer>
+
+<script>
+document.querySelectorAll(".faq-item .q").forEach((q) => {
+  q.addEventListener("click", () => {
+    q.closest(".faq-item").classList.toggle("open");
+  });
+});
+</script>
 
 </body>
 </html>
