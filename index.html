@@ -110,10 +110,17 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .intent-btn.active{background:var(--pink);color:var(--cream);border-color:var(--cream)}
 .section-mark-wrap{padding:18px 18px 0;text-align:center}
 .claim-footer{background:var(--plum-deep);padding:22px 20px 28px;text-align:center}
-.claim-footer p{color:var(--cream);opacity:.75;font-size:12.5px;margin-bottom:8px}
-.claim-footer a{font-family:var(--font-display);font-size:16px;color:var(--gold);text-decoration:underline}
-.claim-footer .embed-toggle{background:none;border:none;font-family:var(--font-display);font-size:16px;color:var(--gold);text-decoration:underline;cursor:pointer}
-.embed-box{display:none;margin-top:12px;text-align:left;max-width:320px;margin-left:auto;margin-right:auto}
+.footer-buttons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.footer-btn{
+  font-family:var(--font-display);font-size:14px;letter-spacing:.02em;
+  border:2px solid var(--plum-deep);padding:9px 16px;border-radius:20px;cursor:pointer;
+  text-decoration:none;display:inline-block
+}
+.footer-btn.btn-teal{background:var(--teal);color:var(--cream)}
+.footer-btn.btn-orange{background:var(--orange);color:var(--cream)}
+.footer-btn.btn-gold{background:var(--gold);color:var(--plum-deep)}
+.footer-btn.btn-pink{background:var(--pink);color:var(--cream)}
+.embed-box{display:none;margin-top:16px;text-align:left;max-width:320px;margin-left:auto;margin-right:auto}
 .embed-box.shown{display:block}
 .embed-box input{width:100%;padding:8px 10px;border-radius:6px;border:2px solid var(--gold);font-family:var(--font-body);font-size:13px;margin-bottom:8px}
 .embed-box button{font-family:var(--font-display);font-size:13px;background:var(--orange);color:var(--cream);border:2px solid var(--gold);padding:6px 14px;border-radius:6px;cursor:pointer;margin-bottom:8px}
@@ -127,11 +134,6 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
   <div class="brand-wordmark">Bars. Bands. Nearby.</div>
   <div class="brand-duo">Area Bands &middot; Area Bars</div>
   <p style="margin-top:4px">Live shows and daily specials, updated by the venues themselves as it happens</p>
-  <p style="margin-top:8px">
-    <a href="about.html" style="color:var(--gold);text-decoration:underline;font-size:12px">What is AreaBands?</a>
-    &middot;
-    <a href="for-venues.html" style="color:var(--gold);text-decoration:underline;font-size:12px">Own a bar or venue?</a>
-  </p>
 </div>
 <svg class="wave" viewBox="0 0 1440 40" preserveAspectRatio="none"><path fill="#F4622D" d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z"/></svg>
 <div class="near-me">
@@ -164,12 +166,12 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
   <div class="directory" id="directory"></div>
 </div>
 <div class="claim-footer">
-  <p>See your bar or venue in the list above, unclaimed?</p>
-  <a href="for-venues.html">Is this your business? See how listing works &rarr;</a>
-  <p style="margin-top:14px">Already listed with us?</p>
-  <a href="login.html">Sign in to update tonight's show &rarr;</a>
-  <p style="margin-top:14px">Run a local blog or site?</p>
-  <button class="embed-toggle" id="toggleEmbed">Add our live music widget to your site &rarr;</button>
+  <div class="footer-buttons">
+    <a class="footer-btn btn-teal" href="about.html">What is AreaBands?</a>
+    <a class="footer-btn btn-orange" href="for-venues.html">Own a Bar or Venue?</a>
+    <a class="footer-btn btn-gold" href="login.html">Venue Sign In</a>
+    <button class="footer-btn btn-pink" id="toggleEmbed">Embed Our Widget</button>
+  </div>
   <div class="embed-box" id="embedBox">
     <input type="text" id="embedCityInput" placeholder="Your city or zip">
     <button id="embedGoBtn">Generate Code</button>
