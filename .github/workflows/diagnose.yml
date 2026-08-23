@@ -1,0 +1,25 @@
+name: Diagnose live site
+
+# Manual-only, one-off check: curls the live pages and prints exactly what
+# the server returns (status code + first bytes of body) so we can see the
+# real problem instead of guessing from a phone screenshot.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check live pages
+        run: |
+          for path in "" "index.html" "about.html" "login.html" "signup.html" "dashboard.html"; do
+            url="https://mediain360.com/$path"
+            echo "===================================================="
+            echo "GET $url"
+            echo "===================================================="
+            curl -sS -D - -o /tmp/body.html "$url" || echo "curl failed"
+            echo "--- first 500 bytes of body ---"
+            head -c 500 /tmp/body.html
+            echo
+            echo
+          done

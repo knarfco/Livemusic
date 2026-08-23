@@ -44,6 +44,9 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .card .band{font-size:14px;color:var(--ink);margin-top:2px;font-weight:600}
 .card .time{font-family:var(--font-display);font-size:14px;color:var(--orange);font-weight:400}
 .empty{padding:40px 20px;text-align:center;color:var(--plum);font-weight:500}
+.gate{padding:36px 22px;text-align:center;color:var(--plum);font-weight:500}
+.gate .gate-title{font-family:var(--font-display);font-size:22px;color:var(--plum-deep);margin-bottom:8px}
+.gate p{font-size:14px;max-width:320px;margin:0 auto}
 
 .badge{display:inline-block;font-family:var(--font-display);font-size:11px;letter-spacing:.08em;padding:3px 10px;border-radius:20px;margin-bottom:10px}
 .featured{padding:18px 18px 4px}
@@ -91,6 +94,9 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .near-me-address button{font-family:var(--font-display);font-size:14px;background:var(--orange);color:var(--cream);border:2px solid var(--plum-deep);padding:0 16px;border-radius:20px;cursor:pointer}
 .near-me-status{color:var(--cream);opacity:.8;font-size:12px;margin-top:8px}
 .distance{font-family:var(--font-body);font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.03em}
+.claim-footer{background:var(--plum-deep);padding:22px 20px 28px;text-align:center}
+.claim-footer p{color:var(--cream);opacity:.75;font-size:12.5px;margin-bottom:8px}
+.claim-footer a{font-family:var(--font-display);font-size:16px;color:var(--gold);text-decoration:underline}
 </style>
 </head>
 <body>
@@ -113,6 +119,10 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 <div class="day-picker" id="dayPicker"></div>
 <div class="list" id="list"><div class="empty">Loading…</div></div>
 <div class="directory" id="directory"></div>
+<div class="claim-footer">
+  <p>See your bar or venue in the list above, unclaimed?</p>
+  <a href="signup.html">Is this your business? Claim your free listing &rarr;</a>
+</div>
 
 <script>
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
