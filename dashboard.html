@@ -58,6 +58,7 @@ textarea.offer-input{width:100%;padding:8px 10px;border-radius:4px;border:2px so
 <div class="banner" id="pendingBanner">You're listed for free (name + address). Add $11.97/mo to publish this schedule live — reach out and we'll turn it on.</div>
 <div class="wrap" id="wrap">
   <div id="performance"></div>
+  <div id="specials"></div>
   <p style="color:#888;font-size:13px;margin-bottom:12px">Add or edit this week's lineup. Saves are live on the site right away — leave the band field blank and save to remove a night.</p>
   <div id="week"></div>
 </div>
@@ -129,7 +130,53 @@ async function init() {
     document.getElementById("pendingBanner").style.display = "block";
   }
   await renderPerformance();
+  await renderSpecials();
   await renderWeek();
+}
+
+async function renderSpecials() {
+  const el = document.getElementById("specials");
+
+  if (!venue.is_active) {
+    el.innerHTML = `
+      <div class="stats-card">
+        <h2>Today's Specials</h2>
+        <p class="locked-note">Not just for bands -- if you're a bar or restaurant without live music, this is your listing. Add $11.97/mo to post a happy hour, a daily deal, or a one-off event that shows up live on the site. Reach out and we'll turn it on.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const { data: specialsRow } = await client
+    .from("venue_specials")
+    .select("specials_text")
+    .eq("venue_id", venue.id)
+    .maybeSingle();
+
+  el.innerHTML = `
+    <div class="stats-card">
+      <h2>Today's Specials</h2>
+      <label class="offer-label" for="specialsInput">Happy hour, a daily deal, an event -- shown on your listing whether or not you post a band tonight</label>
+      <textarea class="offer-input" id="specialsInput" placeholder='e.g. "Happy Hour 4-6pm -- $2 off drafts" or "Trivia Night, 7pm"'>${specialsRow?.specials_text ?? ""}</textarea>
+      <div class="actions">
+        <button class="save" id="saveSpecials">Save Specials</button>
+        <span class="status" id="specialsStatus"></span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("saveSpecials").addEventListener("click", async () => {
+    const text = document.getElementById("specialsInput").value.trim();
+    const statusEl = document.getElementById("specialsStatus");
+    if (!text) {
+      await client.from("venue_specials").delete().eq("venue_id", venue.id);
+      statusEl.textContent = "Cleared";
+    } else {
+      await client.from("venue_specials").upsert({ venue_id: venue.id, specials_text: text, updated_at: new Date().toISOString() });
+      statusEl.textContent = "Saved";
+    }
+    setTimeout(() => { statusEl.textContent = ""; }, 2000);
+  });
 }
 
 async function renderPerformance() {

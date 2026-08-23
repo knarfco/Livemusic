@@ -23,7 +23,10 @@ body::before{
 }
 @keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
 .box{position:relative;z-index:1;background:#FDF3E7;color:#2B1331;border-radius:6px;padding:32px;width:100%;max-width:360px;border:2px solid #1C0C22;box-shadow:6px 6px 0 #F4B942}
-.brand-logo{height:56px;margin-bottom:14px;display:block}
+.brand-wordmark{
+  font-family:'Boogaloo',cursive;font-weight:400;font-size:30px;letter-spacing:.02em;margin-bottom:10px;
+  background:linear-gradient(90deg,#E63B7A,#F4622D,#F4B942);-webkit-background-clip:text;background-clip:text;color:transparent
+}
 h1{font-family:'Boogaloo',cursive;font-weight:400;font-size:24px;margin-bottom:6px;color:#2B1331}
 p{color:#1B6B6B;font-size:13px;margin-bottom:24px;font-weight:500}
 label{display:block;font-size:13px;margin-bottom:6px;color:#2B1331;font-weight:600}
@@ -34,7 +37,7 @@ button{width:100%;padding:12px;border:2px solid #2B1331;border-radius:4px;backgr
 </head>
 <body>
 <div class="box">
-  <img class="brand-logo" src="assets/areabands-header-dark.svg" alt="AreaBands">
+  <div class="brand-wordmark">AreaBands</div>
   <h1>Venue Login</h1>
   <p>Update your live music schedule — changes go live immediately.</p>
   <form id="loginForm">
