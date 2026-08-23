@@ -99,6 +99,11 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .near-me-address button{font-family:var(--font-display);font-size:14px;background:var(--orange);color:var(--cream);border:2px solid var(--plum-deep);padding:0 16px;border-radius:20px;cursor:pointer}
 .near-me-status{color:var(--cream);opacity:.8;font-size:12px;margin-top:8px}
 .distance{font-family:var(--font-body);font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.03em}
+.intent-picker{margin-top:14px;padding-top:14px;border-top:1px solid rgba(253,243,231,.15)}
+.intent-label{color:var(--cream);opacity:.8;font-size:12px;margin-bottom:8px;font-weight:600}
+.intent-btn{font-family:var(--font-display);font-size:14px;background:var(--cream);color:var(--plum-deep);border:2px solid var(--plum-deep);padding:6px 14px;border-radius:20px;cursor:pointer;margin:0 4px}
+.intent-btn.active{background:var(--pink);color:var(--cream);border-color:var(--cream)}
+.section-mark-wrap{padding:18px 18px 0;text-align:center}
 .claim-footer{background:var(--plum-deep);padding:22px 20px 28px;text-align:center}
 .claim-footer p{color:var(--cream);opacity:.75;font-size:12.5px;margin-bottom:8px}
 .claim-footer a{font-family:var(--font-display);font-size:16px;color:var(--gold);text-decoration:underline}
@@ -120,19 +125,31 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
     <button id="addressGoBtn">Go</button>
   </div>
   <div class="near-me-status" id="nearMeStatus"></div>
+  <div class="intent-picker" id="intentPicker">
+    <div class="intent-label">What are you looking for?</div>
+    <button class="intent-btn" data-intent="bands">&#127928; Bands</button>
+    <button class="intent-btn" data-intent="bars">&#127866; Bars</button>
+    <button class="intent-btn" data-intent="both">Both</button>
+  </div>
 </div>
-<div style="padding:18px 18px 0;text-align:center">
-  <img class="section-mark" src="assets/areabands-mark.png" alt="Live Bands">
+<div class="gate" id="entryGate">
+  <div class="gate-title">Where are you, and what are you looking for?</div>
+  <p>Share your location or type your city/zip above, and pick Bands, Bars, or Both — that's how we know what to actually show you instead of every venue in the country.</p>
 </div>
-<div class="day-picker" id="dayPicker"></div>
-<div class="list" id="list"><div class="empty">Loading…</div></div>
-<div style="padding:18px 18px 0;text-align:center">
-  <img class="section-mark" src="assets/areabars-mark.png" alt="Local Bars">
+<div id="bandsSection" style="display:none">
+  <div class="section-mark-wrap"><img class="section-mark" src="assets/areabands-mark.png" alt="Live Bands"></div>
+  <div class="day-picker" id="dayPicker"></div>
+  <div class="list" id="list"><div class="empty">Loading…</div></div>
 </div>
-<div class="directory" id="directory"></div>
+<div id="barsSection" style="display:none">
+  <div class="section-mark-wrap"><img class="section-mark" src="assets/areabars-mark.png" alt="Local Bars"></div>
+  <div class="directory" id="directory"></div>
+</div>
 <div class="claim-footer">
   <p>See your bar or venue in the list above, unclaimed?</p>
   <a href="about.html">Is this your business? See how listing works &rarr;</a>
+  <p style="margin-top:14px">Already listed with us?</p>
+  <a href="login.html">Sign in to update tonight's show &rarr;</a>
 </div>
 
 <script>
@@ -169,14 +186,30 @@ function boundingBox(lat, lng, radiusMiles) {
   };
 }
 
-function gateHTML() {
-  return `
-    <div class="gate">
-      <div class="gate-title">Where are you?</div>
-      <p>Tap "Use My Location" above, or type your city or zip — that's how we know what's actually nearby instead of showing every venue in the country at once.</p>
-    </div>
-  `;
+let userIntent = null; // 'bands' | 'bars' | 'both'
+
+// Only shows/loads the section(s) the visitor actually asked for -- someone
+// who only wants bars never triggers the live-music query or sees the
+// schedule UI, and vice versa. Re-evaluated whenever location or intent
+// changes; nothing is remembered between visits, by design.
+function refresh() {
+  const ready = Boolean(userLoc && userIntent);
+  document.getElementById("entryGate").style.display = ready ? "none" : "";
+  const showBands = ready && (userIntent === "bands" || userIntent === "both");
+  const showBars = ready && (userIntent === "bars" || userIntent === "both");
+  document.getElementById("bandsSection").style.display = showBands ? "" : "none";
+  document.getElementById("barsSection").style.display = showBars ? "" : "none";
+  if (showBands) loadShows();
+  if (showBars) loadDirectory();
 }
+
+document.getElementById("intentPicker").addEventListener("click", (e) => {
+  const btn = e.target.closest(".intent-btn");
+  if (!btn) return;
+  userIntent = btn.dataset.intent;
+  document.querySelectorAll(".intent-btn").forEach((b) => b.classList.toggle("active", b === btn));
+  refresh();
+});
 
 function haversineMiles(lat1, lng1, lat2, lng2) {
   const R = 3958.8;
@@ -207,8 +240,7 @@ async function geocode(query) {
 function setUserLoc(loc, statusText) {
   userLoc = loc;
   document.getElementById("nearMeStatus").textContent = statusText;
-  loadShows();
-  loadDirectory();
+  refresh();
 }
 
 document.getElementById("useLocationBtn").addEventListener("click", () => {
@@ -306,10 +338,7 @@ document.getElementById("list").addEventListener("click", (e) => {
 
 async function loadShows() {
   const listEl = document.getElementById("list");
-  if (!userLoc) {
-    listEl.innerHTML = gateHTML();
-    return;
-  }
+  if (!userLoc) return; // refresh() only calls this once a location is set
   listEl.innerHTML = '<div class="empty">Loading…</div>';
 
   const box = boundingBox(userLoc.lat, userLoc.lng, SEARCH_RADIUS_MILES);
@@ -372,10 +401,8 @@ async function loadShows() {
 
 async function loadDirectory() {
   const dirEl = document.getElementById("directory");
-  if (!userLoc) {
-    dirEl.innerHTML = "";
-    return;
-  }
+  if (!userLoc) return; // refresh() only calls this once a location is set
+  dirEl.innerHTML = '<div class="empty">Loading…</div>';
 
   const box = boundingBox(userLoc.lat, userLoc.lng, SEARCH_RADIUS_MILES);
   const { data, error } = await client
@@ -416,8 +443,7 @@ async function loadDirectory() {
 }
 
 renderPicker();
-loadShows();
-loadDirectory();
+refresh();
 </script>
 </body>
 </html>
