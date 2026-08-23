@@ -29,6 +29,11 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .header>*{position:relative;z-index:1}
 @keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
 .header .brand-logo{height:74px;max-width:80%;margin:0 auto;display:block}
+.brand-wordmark{
+  font-family:var(--font-display);font-weight:400;font-size:36px;letter-spacing:.02em;
+  background:linear-gradient(90deg,var(--gold),var(--orange) 55%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent
+}
+.section-mark{display:block;height:52px;margin:0 auto 4px;max-width:220px}
 .header p{color:var(--cream);opacity:.75;font-size:13px;margin-top:6px;font-weight:500}
 .wave{display:block;width:100%;height:22px;margin-top:-2px}
 .day-picker{display:flex;gap:8px;padding:14px 16px 18px;overflow-x:auto;background:var(--orange);
@@ -101,7 +106,7 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 </head>
 <body>
 <div class="header">
-  <img class="brand-logo" src="assets/areabands-header.svg" alt="AreaBands">
+  <div class="brand-wordmark">AreaBands</div>
   <div style="font-family:var(--font-display);font-size:17px;color:var(--gold);letter-spacing:.03em;margin-top:6px">Bars. Bands. Nearby.</div>
   <p style="margin-top:4px">Live music tonight, updated by the venues as it happens</p>
   <p style="margin-top:8px"><a href="about.html" style="color:var(--gold);text-decoration:underline;font-size:12px">Own a bar or venue? Learn more &rarr;</a></p>
@@ -115,6 +120,9 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
     <button id="addressGoBtn">Go</button>
   </div>
   <div class="near-me-status" id="nearMeStatus"></div>
+</div>
+<div style="padding:18px 18px 0;text-align:center">
+  <img class="section-mark" src="assets/areabands-header.svg" alt="Live Bands">
 </div>
 <div class="day-picker" id="dayPicker"></div>
 <div class="list" id="list"><div class="empty">Loading…</div></div>
