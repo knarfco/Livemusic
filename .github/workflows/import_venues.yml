@@ -1,0 +1,59 @@
+name: Populate venues nationwide (OpenStreetMap)
+
+# Fully automatic: runs on its own the moment anything under pipeline/
+# changes on main, and again every week after that to pick up new/changed
+# venues -- nobody has to trigger this by hand. workflow_dispatch is there
+# only for an optional forced re-run or a --dry-run sanity check; neither is
+# required for normal operation.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "pipeline/**"
+      - ".github/workflows/import_venues.yml"
+  schedule:
+    - cron: "0 4 * * 0" # every Sunday, 04:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Skip the database write and just print counts"
+        type: boolean
+        default: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Install postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run pending migrations
+        # Runs first so a new column/index this same push added (e.g.
+        # migration_012's dedup_key) always exists before the import step
+        # below writes to it -- migrate.yml triggers on the same push but
+        # runs as a separate, unordered job, so this can't rely on it having
+        # already finished. Safe to repeat: run_migrations.sh tracks what's
+        # already applied and skips it.
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: bash run_migrations.sh
+
+      - name: Run nationwide import
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        working-directory: pipeline
+        run: |
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}" = "true" ]; then
+            python run.py --dry-run
+          else
+            python run.py
+          fi
