@@ -9,7 +9,18 @@ import requests
 
 from normalize import dedup_key, normalize_zip
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+# Public Overpass mirrors, tried in order -- overpass-api.de rejects
+# requests that don't identify themselves (406) or that hit it too hard
+# (429/504); a real User-Agent fixes the first, and falling back to another
+# mirror covers the rest without needing anyone to notice or intervene.
+OVERPASS_URLS = (
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.osm.ch/api/interpreter",
+)
+REQUEST_HEADERS = {
+    "User-Agent": "AreaBandsVenueImportBot/1.0 (https://areabands.com; free venue-listing data pipeline)"
+}
 AMENITIES = ("bar", "pub", "restaurant", "cafe", "fast_food")
 DELAY_BETWEEN_STATES_SECONDS = 3
 REQUEST_TIMEOUT_SECONDS = 200
@@ -50,23 +61,25 @@ def build_query(state_abbr: str) -> str:
 def fetch_state_raw(state_abbr: str) -> list[dict]:
     query = build_query(state_abbr)
     last_error = None
-    for attempt in range(1, MAX_RETRIES + 1):
-        try:
-            resp = requests.post(
-                OVERPASS_URL, data=query, timeout=REQUEST_TIMEOUT_SECONDS
-            )
-            if resp.status_code == 200:
-                return resp.json().get("elements", [])
-            if resp.status_code in (429, 504):
-                last_error = f"HTTP {resp.status_code}"
+    for url in OVERPASS_URLS:
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                resp = requests.post(
+                    url, data=query, headers=REQUEST_HEADERS,
+                    timeout=REQUEST_TIMEOUT_SECONDS,
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("elements", [])
+                if resp.status_code in (406, 429, 504):
+                    last_error = f"HTTP {resp.status_code} from {url}"
+                    time.sleep(10 * attempt)
+                    continue
+                resp.raise_for_status()
+            except requests.RequestException as exc:
+                last_error = f"{exc} ({url})"
                 time.sleep(10 * attempt)
-                continue
-            resp.raise_for_status()
-        except requests.RequestException as exc:
-            last_error = str(exc)
-            time.sleep(10 * attempt)
     raise RuntimeError(
-        f"Overpass fetch for {state_abbr} failed after {MAX_RETRIES} attempts: {last_error}"
+        f"Overpass fetch for {state_abbr} failed on every mirror: {last_error}"
     )
 
 
