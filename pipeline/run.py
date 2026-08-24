@@ -14,6 +14,7 @@ never required.
 
 import argparse
 import sys
+import time
 
 import chain_detect
 import fetch_osm
@@ -29,26 +30,30 @@ def run(states: list[str], dry_run: bool) -> None:
     total_written = 0
     failed_states = []
 
-    for state_abbr, records in fetch_osm.fetch_all(states):
+    for i, state_abbr in enumerate(states):
         try:
+            records = fetch_osm.fetch_state(state_abbr)
             kept = [
                 r for r in records
                 if not chain_detect.is_chain(r["name"], denylist, r.get("brand"))
             ]
+            excluded = len(records) - len(kept)
+            written = 0
+            if not dry_run and kept:
+                written = load.upsert_venues(conn, kept)
+
+            total_fetched += len(records)
+            total_excluded += excluded
+            total_written += written
+            print(f"[{state_abbr}] fetched={len(records)} chain_excluded={excluded} written={written}")
         except Exception as exc:  # a genuinely broken state shouldn't kill the run
             print(f"[{state_abbr}] FAILED: {exc}", file=sys.stderr)
             failed_states.append(state_abbr)
-            continue
+            if conn is not None:
+                conn.rollback()  # clear the failed transaction so the next state can still write
 
-        excluded = len(records) - len(kept)
-        total_fetched += len(records)
-        total_excluded += excluded
-
-        if not dry_run and kept:
-            written = load.upsert_venues(conn, kept)
-            total_written += written
-
-        print(f"[{state_abbr}] fetched={len(records)} chain_excluded={excluded}")
+        if i < len(states) - 1:
+            time.sleep(fetch_osm.DELAY_BETWEEN_STATES_SECONDS)
 
     if conn is not None:
         conn.close()

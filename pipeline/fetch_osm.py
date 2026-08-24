@@ -134,10 +134,3 @@ def fetch_state(state_abbr: str) -> list[dict]:
         if record is not None:
             records.append(record)
     return records
-
-
-def fetch_all(states: list[str] = STATE_ABBREVIATIONS):
-    for i, state_abbr in enumerate(states):
-        yield state_abbr, fetch_state(state_abbr)
-        if i < len(states) - 1:
-            time.sleep(DELAY_BETWEEN_STATES_SECONDS)

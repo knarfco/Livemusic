@@ -3,6 +3,7 @@ Run with: python test_pipeline.py
 """
 
 import chain_detect
+import load
 import normalize
 
 
@@ -45,6 +46,20 @@ def main():
     results.append(check(
         "an OSM brand tag alone is enough to flag as a chain",
         chain_detect.is_chain("Anything", denylist, brand="Some Chain Co") is True,
+    ))
+
+    # Regression: the same real place mapped as two OSM elements (e.g. a
+    # building outline and a point) must collapse to one row before it ever
+    # reaches the database -- ON CONFLICT DO UPDATE can't target a row twice
+    # in the same statement.
+    dupes = [
+        {"dedup_key": "a", "name": "Tiki Bar (way)"},
+        {"dedup_key": "a", "name": "Tiki Bar (node)"},
+        {"dedup_key": "b", "name": "Different Place"},
+    ]
+    results.append(check(
+        "duplicate dedup_keys within a batch collapse to one row",
+        len(load.dedupe_records(dupes)) == 2,
     ))
 
     if not all(results):

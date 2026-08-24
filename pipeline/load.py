@@ -67,12 +67,20 @@ def to_row(record: dict) -> tuple:
     )
 
 
+def dedupe_records(records: list[dict]) -> list[dict]:
+    # A single INSERT ... ON CONFLICT DO UPDATE can't target the same row
+    # twice -- and the same real-world place sometimes shows up as more than
+    # one OSM element (e.g. a building outline and a separate point). Keep
+    # one record per dedup_key before batching so that never happens.
+    return list({r["dedup_key"]: r for r in records}.values())
+
+
 def upsert_venues(conn, records: list[dict], batch_size: int = 500) -> int:
     if not records:
         return 0
-    rows = [to_row(r) for r in records]
+    rows = [to_row(r) for r in dedupe_records(records)]
     with conn.cursor() as cur:
         for i in range(0, len(rows), batch_size):
             psycopg2.extras.execute_values(cur, UPSERT_SQL, rows[i:i + batch_size])
-        conn.commit()
+            conn.commit()
     return len(rows)
