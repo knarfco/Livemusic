@@ -584,6 +584,7 @@ async function loadDirectory() {
     .from("venues")
     .select("id, name, city, is_active, lat, lng")
     .eq("is_active", false)
+    .eq("category", "bar")
     .gte("lat", box.minLat)
     .lte("lat", box.maxLat)
     .gte("lng", box.minLng)
@@ -605,7 +606,7 @@ async function loadDirectory() {
   const hasShowTonight = new Set((flags || []).map((f) => f.venue_id));
 
   dirEl.innerHTML = `
-    <h2>More Venues on the Space Coast</h2>
+    <h2>More Bars &amp; Pubs Nearby</h2>
     <ul>${data
       .map(
         (v) =>

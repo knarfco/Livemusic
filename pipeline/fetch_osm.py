@@ -61,6 +61,7 @@ def build_query(state_abbr: str) -> str:
 def fetch_state_raw(state_abbr: str) -> list[dict]:
     query = build_query(state_abbr)
     last_error = None
+    got_empty_200 = False
     for url in OVERPASS_URLS:
         for attempt in range(1, MAX_RETRIES + 1):
             try:
@@ -69,7 +70,18 @@ def fetch_state_raw(state_abbr: str) -> list[dict]:
                     timeout=REQUEST_TIMEOUT_SECONDS,
                 )
                 if resp.status_code == 200:
-                    return resp.json().get("elements", [])
+                    elements = resp.json().get("elements", [])
+                    if elements:
+                        return elements
+                    # A whole US state legitimately having zero bars/restaurants
+                    # is implausible -- more likely this mirror's area index for
+                    # this state is stale or missing (a real, silent failure
+                    # mode we hit for South Carolina). Try another mirror
+                    # before accepting an empty result.
+                    got_empty_200 = True
+                    last_error = f"200 OK but zero elements from {url}"
+                    time.sleep(10 * attempt)
+                    continue
                 if resp.status_code in (406, 429, 504):
                     last_error = f"HTTP {resp.status_code} from {url}"
                     time.sleep(10 * attempt)
@@ -78,6 +90,9 @@ def fetch_state_raw(state_abbr: str) -> list[dict]:
             except requests.RequestException as exc:
                 last_error = f"{exc} ({url})"
                 time.sleep(10 * attempt)
+    if got_empty_200:
+        print(f"[{state_abbr}] WARNING: every mirror returned zero elements ({last_error})")
+        return []
     raise RuntimeError(
         f"Overpass fetch for {state_abbr} failed on every mirror: {last_error}"
     )
