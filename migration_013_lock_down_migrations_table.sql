@@ -1,0 +1,12 @@
+-- Supabase's own security scanner flagged _migrations_applied (created by
+-- run_migrations.sh, not schema.sql) as publicly readable/writable: every
+-- other table in this project has row-level security, but this internal
+-- bookkeeping table never did. It holds no user or business data -- just
+-- migration filenames and timestamps -- so the real-world risk was low,
+-- but it's still a real gap worth closing properly.
+--
+-- No policies needed: this table is only ever touched by run_migrations.sh
+-- over the direct database connection (which bypasses RLS, same as every
+-- other migration in this repo), never through the public API. Enabling
+-- RLS with zero policies simply locks the public API out of it entirely.
+alter table _migrations_applied enable row level security;
