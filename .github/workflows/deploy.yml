@@ -3,10 +3,13 @@ name: Deploy site to Hostinger
 # Uploads the public web files straight to Hostinger over FTP any time they
 # change on main — replaces zipping the files and uploading them by hand.
 on:
-  # Manual-only for now -- was auto-firing on every push to main, which kept
-  # re-creating a nested public_html/public_html on the server because the
-  # FTP account's home directory and HOSTINGER_FTP_DIR both point at
-  # public_html. Re-enable the push trigger once that's confirmed fixed.
+  # Re-enabled after being manual-only for a while: this used to double-nest
+  # public_html on the server because the FTP account's home directory and
+  # HOSTINGER_FTP_DIR both pointed at public_html. Trying it live again --
+  # if it nests again, clear out public_html on the server and go back to
+  # manual-only (workflow_dispatch) until HOSTINGER_FTP_DIR is corrected.
+  push:
+    branches: [main]
   workflow_dispatch: {}
 
 jobs:
