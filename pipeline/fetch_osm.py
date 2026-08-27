@@ -21,6 +21,7 @@ OVERPASS_URLS = (
 REQUEST_HEADERS = {
     "User-Agent": "AreaBandsVenueImportBot/1.0 (https://areabands.com; free venue-listing data pipeline)"
 }
+SOURCE_NAME = "osm"
 AMENITIES = ("bar", "pub", "restaurant", "cafe", "fast_food")
 DELAY_BETWEEN_STATES_SECONDS = 3
 REQUEST_TIMEOUT_SECONDS = 200
@@ -162,7 +163,7 @@ def normalize_element(el: dict, state_abbr: str) -> dict | None:
         "lat": lat,
         "lng": lng,
         "brand": tags.get("brand"),
-        "source": "osm",
+        "source": SOURCE_NAME,
         "source_id": f"{el['type']}/{el['id']}",
     }
 
