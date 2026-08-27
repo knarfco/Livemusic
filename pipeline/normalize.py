@@ -51,13 +51,28 @@ def normalize_zip(zip_code: str) -> str:
     return match.group(0) if match else ""
 
 
-def dedup_key(name: str, address: str, zip_code: str) -> str | None:
+def dedup_key(
+    name: str,
+    address: str,
+    zip_code: str,
+    lat: float | None = None,
+    lng: float | None = None,
+) -> str | None:
     norm_name = normalize_name(name)
     norm_address = normalize_address(address)
     norm_zip = normalize_zip(zip_code)
-    if not norm_name or not norm_address:
+    if not norm_name:
         return None
-    return f"{norm_name}|{norm_address}|{norm_zip}"
+    if norm_address:
+        return f"{norm_name}|{norm_address}|{norm_zip}"
+    # Plenty of real, independent venues are only mapped with a name and a
+    # pin -- no formal street address tags -- especially compared to chains,
+    # which tend to get precise addresses from corporate GIS/import bots.
+    # Falling back to a rounded coordinate (~11m precision) instead of
+    # dropping these outright still gives a stable key across re-runs.
+    if lat is not None and lng is not None:
+        return f"{norm_name}|geo:{lat:.4f},{lng:.4f}|{norm_zip}"
+    return None
 
 
 def slugify(name: str) -> str:
