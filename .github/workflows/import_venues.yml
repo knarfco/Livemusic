@@ -1,4 +1,4 @@
-name: Populate venues nationwide (OpenStreetMap)
+name: Populate venues nationwide (OpenStreetMap + Overture Maps)
 
 # Fully automatic: runs on its own the moment anything under pipeline/
 # changes on main, and again every week after that to pick up new/changed
@@ -22,6 +22,15 @@ on:
 
 jobs:
   import:
+    strategy:
+      fail-fast: false
+      # One job per source, run in parallel -- each source downloads all 50
+      # states + DC on its own, and a single job doing that for two sources
+      # back-to-back risks running long enough to hit GitHub's 6-hour
+      # hosted-runner cap. Splitting also means a broken/slow Overture
+      # download can't hold up (or take down) the proven-working OSM job.
+      matrix:
+        source: [osm, overture]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,19 +50,20 @@ jobs:
         # migration_012's dedup_key) always exists before the import step
         # below writes to it -- migrate.yml triggers on the same push but
         # runs as a separate, unordered job, so this can't rely on it having
-        # already finished. Safe to repeat: run_migrations.sh tracks what's
-        # already applied and skips it.
+        # already finished. Safe to repeat (including twice in parallel,
+        # once per matrix job): run_migrations.sh tracks what's already
+        # applied and skips it.
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: bash run_migrations.sh
 
-      - name: Run nationwide import
+      - name: Run nationwide import (${{ matrix.source }})
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         working-directory: pipeline
         run: |
           if [ "${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}" = "true" ]; then
-            python run.py --dry-run
+            python run.py --source=${{ matrix.source }} --dry-run
           else
-            python run.py
+            python run.py --source=${{ matrix.source }}
           fi

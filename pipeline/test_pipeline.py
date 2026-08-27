@@ -4,6 +4,7 @@ Run with: python test_pipeline.py
 
 import chain_detect
 import fetch_osm
+import fetch_overture
 import load
 import normalize
 
@@ -51,6 +52,59 @@ def main():
     results.append(check(
         "amenity=pub is always a bar regardless of name",
         fetch_osm.classify_category("pub", {"name": "Mario's Italian Kitchen"}) == "bar",
+    ))
+
+    results.append(check(
+        "Overture: amenity-equivalent bar category is recognized",
+        fetch_overture.classify_category({"primary": "dive_bar"}) == "bar",
+    ))
+    results.append(check(
+        "Overture: plain restaurant category stays a restaurant",
+        fetch_overture.classify_category({"primary": "italian_restaurant"}) == "restaurant",
+    ))
+    results.append(check(
+        "Overture: an alternate category catches a bar even if primary doesn't",
+        fetch_overture.classify_category(
+            {"primary": "food_and_beverage_retail", "alternate": ["gastropub"]}
+        ) == "bar",
+    ))
+    results.append(check(
+        "Overture: an unrecognized category is skipped entirely",
+        fetch_overture.classify_category({"primary": "hair_salon"}) is None,
+    ))
+
+    low_confidence_feature = {
+        "properties": {
+            "confidence": 0.3,
+            "categories": {"primary": "bar"},
+            "names": {"primary": "Sketchy Place"},
+            "addresses": [{"freeform": "1 Main St", "locality": "Plantation", "postcode": "33317"}],
+        },
+        "geometry": {"coordinates": [-80.23, 26.13]},
+    }
+    results.append(check(
+        "Overture: a low-confidence feature is dropped",
+        fetch_overture.normalize_feature(low_confidence_feature, "FL") is None,
+    ))
+
+    good_feature = {
+        "properties": {
+            "confidence": 0.9,
+            "categories": {"primary": "pub"},
+            "names": {"primary": "The Local Pour"},
+            "addresses": [{"freeform": "", "locality": "Plantation", "postcode": "33317"}],
+            "brand": {"names": {"primary": "Some Big Chain Co"}},
+        },
+        "geometry": {"coordinates": [-80.2331, 26.1276]},
+    }
+    record = fetch_overture.normalize_feature(good_feature, "FL")
+    results.append(check(
+        "Overture: a real feature with no street address still keys off coordinates",
+        record is not None and record["dedup_key"] == "the local pour|geo:26.1276,-80.2331|33317",
+    ))
+    results.append(check(
+        "Overture: the brand field is surfaced for chain_detect to catch",
+        record is not None and record["brand"] == "Some Big Chain Co",
     ))
 
     denylist = chain_detect.load_denylist()
