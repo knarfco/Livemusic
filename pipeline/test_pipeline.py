@@ -3,6 +3,7 @@ Run with: python test_pipeline.py
 """
 
 import chain_detect
+import fetch_osm
 import load
 import normalize
 
@@ -30,8 +31,26 @@ def main():
         == normalize.dedup_key("The Tiki Bar LLC", "123 Main Street Suite 2", "32931-1234"),
     ))
     results.append(check(
-        "dedup_key is None without a usable address",
+        "dedup_key is None without a usable address or coordinates",
         normalize.dedup_key("The Tiki Bar", "", "32931") is None,
+    ))
+    results.append(check(
+        "dedup_key falls back to coordinates when there's no street address",
+        normalize.dedup_key("The Tiki Bar", "", "32931", lat=28.32001, lng=-80.61001)
+        == "the tiki bar|geo:28.3200,-80.6100|32931",
+    ))
+
+    results.append(check(
+        "a restaurant-tagged tavern is reclassified as a bar",
+        fetch_osm.classify_category("restaurant", {"name": "Joe's Tavern & Grill"}) == "bar",
+    ))
+    results.append(check(
+        "a plain restaurant stays a restaurant",
+        fetch_osm.classify_category("restaurant", {"name": "Mario's Italian Kitchen"}) == "restaurant",
+    ))
+    results.append(check(
+        "amenity=pub is always a bar regardless of name",
+        fetch_osm.classify_category("pub", {"name": "Mario's Italian Kitchen"}) == "bar",
     ))
 
     denylist = chain_detect.load_denylist()

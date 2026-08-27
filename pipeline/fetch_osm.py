@@ -44,6 +44,34 @@ AMENITY_TO_CATEGORY = {
     "fast_food": "restaurant",
 }
 
+# OSM mappers tag plenty of real neighborhood bars -- especially ones that
+# serve a real food menu -- as amenity=restaurant rather than bar/pub, so a
+# hard amenity->category mapping alone misses them. Reclassify anything
+# whose name or tags clearly read as a drinking establishment rather than
+# widen the site's "bars" filter back open to every restaurant.
+BAR_NAME_KEYWORDS = (
+    "tavern", "pub", "saloon", "alehouse", "ale house", "taproom",
+    "tap house", "tap room", "brewery", "brewing", "sports bar",
+    "dive bar", "cantina", "speakeasy", "gastropub", "watering hole",
+    "honky tonk", "public house", "bar & grill", "bar and grill",
+    "grill & bar", "grill and bar",
+)
+
+
+def classify_category(amenity: str, tags: dict) -> str:
+    base = AMENITY_TO_CATEGORY.get(amenity, "food_and_drink")
+    if base != "restaurant":
+        return base
+    name = (tags.get("name") or "").lower()
+    if any(keyword in name for keyword in BAR_NAME_KEYWORDS):
+        return "bar"
+    if tags.get("microbrewery") == "yes" or tags.get("brewery"):
+        return "bar"
+    cuisine = (tags.get("cuisine") or "").lower()
+    if "pub" in cuisine or "bar" in cuisine.split(";"):
+        return "bar"
+    return base
+
 
 def build_query(state_abbr: str) -> str:
     amenity_pattern = "|".join(AMENITIES)
@@ -105,34 +133,32 @@ def normalize_element(el: dict, state_abbr: str) -> dict | None:
     if not name or not city:
         return None
 
-    housenumber = tags.get("addr:housenumber", "")
-    street = tags.get("addr:street", "")
-    address = f"{housenumber} {street}".strip()
-    if not address:
-        return None
-
-    zip_code = normalize_zip(tags.get("addr:postcode", ""))
-    key = dedup_key(name, address, zip_code)
-    if key is None:
-        return None
-
     if el["type"] == "way":
         center = el.get("center", {})
         lat, lng = center.get("lat"), center.get("lon")
     else:
         lat, lng = el.get("lat"), el.get("lon")
 
+    housenumber = tags.get("addr:housenumber", "")
+    street = tags.get("addr:street", "")
+    address = f"{housenumber} {street}".strip()
+
+    zip_code = normalize_zip(tags.get("addr:postcode", ""))
+    key = dedup_key(name, address, zip_code, lat=lat, lng=lng)
+    if key is None:
+        return None
+
     amenity = tags.get("amenity")
     return {
         "dedup_key": key,
         "name": name,
-        "address": address,
+        "address": address or None,
         "city": city,
         "state": tags.get("addr:state") or state_abbr,
         "county": tags.get("addr:county"),
         "zip_code": zip_code or None,
         "phone": tags.get("contact:phone") or tags.get("phone"),
-        "category": AMENITY_TO_CATEGORY.get(amenity, "food_and_drink"),
+        "category": classify_category(amenity, tags),
         "lat": lat,
         "lng": lng,
         "brand": tags.get("brand"),
