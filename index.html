@@ -29,11 +29,25 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .header>*{position:relative;z-index:1}
 @keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
 .header .brand-logo{height:74px;max-width:80%;margin:0 auto;display:block}
-.brand-wordmark{
-  font-family:var(--font-display);font-weight:400;font-size:34px;letter-spacing:.02em;
-  background:linear-gradient(90deg,var(--gold),var(--orange) 55%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent
+.hero-eyebrow{
+  font-family:var(--font-body);font-weight:800;font-size:15px;letter-spacing:.14em;
+  color:var(--cream);text-transform:uppercase
 }
-.brand-duo{font-family:var(--font-body);font-style:italic;font-size:13px;color:var(--gold);opacity:.85;letter-spacing:.02em;margin-top:8px;font-weight:600}
+.brand-wordmark{
+  font-family:var(--font-display);font-weight:400;font-size:40px;letter-spacing:.02em;line-height:1.05;margin:2px 0;
+  background:linear-gradient(90deg,var(--gold),var(--orange) 55%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 14px rgba(244,185,66,.45))
+}
+.hero-eyebrow-lg{
+  font-family:var(--font-body);font-weight:800;font-size:22px;letter-spacing:.02em;line-height:1.2;
+  color:var(--cream);text-transform:uppercase;margin-bottom:12px
+}
+.hero-stat{
+  display:inline-block;font-family:var(--font-body);font-weight:700;font-size:12.5px;letter-spacing:.03em;
+  color:var(--gold);background:rgba(244,185,66,.1);border:1.5px solid rgba(244,185,66,.5);
+  border-radius:20px;padding:6px 16px;margin-top:2px
+}
+.brand-duo{font-family:var(--font-body);font-style:italic;font-size:13px;color:var(--gold);opacity:.85;letter-spacing:.02em;margin-top:10px;font-weight:600}
 .section-mark{display:block;height:52px;margin:0 auto 4px;max-width:220px}
 .header p{color:var(--cream);opacity:.75;font-size:13px;margin-top:6px;font-weight:500}
 .wave{display:block;width:100%;height:22px;margin-top:-2px}
@@ -96,8 +110,16 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 .directory li{font-size:13px;color:var(--plum);opacity:.7;padding:4px 0;border-bottom:1px dashed rgba(43,19,49,.15)}
 .directory li span{opacity:.6;font-size:11px}
 
-.near-me{background:var(--plum);padding:14px 18px;text-align:center}
-.near-me-btn{font-family:var(--font-display);font-size:15px;background:var(--gold);color:var(--plum-deep);border:2px solid var(--plum-deep);padding:8px 18px;border-radius:20px;cursor:pointer}
+.near-me{background:var(--plum-deep);padding:20px 16px 22px;text-align:center}
+.near-me-card{
+  background:var(--plum);border:1.5px solid rgba(27,107,107,.6);border-radius:16px;
+  box-shadow:0 0 24px rgba(27,107,107,.25);padding:18px 16px;max-width:400px;margin:0 auto
+}
+.near-me-btn{
+  font-family:var(--font-display);font-size:17px;background:var(--gold);color:var(--plum-deep);
+  border:none;padding:12px 26px;border-radius:24px;cursor:pointer;letter-spacing:.02em;
+  box-shadow:0 0 18px rgba(244,185,66,.5)
+}
 .near-me-toggle{display:block;color:var(--cream);opacity:.7;font-size:12px;margin-top:8px;text-decoration:underline;background:none;border:none;cursor:pointer;width:100%}
 .near-me-address{display:none;gap:8px;margin-top:10px}
 .near-me-address input{flex:1;padding:8px 10px;border-radius:20px;border:2px solid var(--plum-deep);font-family:var(--font-body);font-size:14px}
@@ -135,24 +157,29 @@ body{background-image:radial-gradient(rgba(43,19,49,.06) 1.5px, transparent 1.5p
 </head>
 <body>
 <div class="header">
-  <div class="brand-wordmark">Bars. Bands. Nearby.</div>
+  <div class="hero-eyebrow">FIND</div>
+  <div class="brand-wordmark">live music &amp; local bars</div>
+  <div class="hero-eyebrow-lg">Near You. Right Now.</div>
+  <div class="hero-stat">100,000+ Independent Bars &amp; Bands &middot; Zero Corporate Chains</div>
   <div class="brand-duo">Area Bands &middot; Area Bars</div>
   <p style="margin-top:4px">Live shows and daily specials, updated by the venues themselves as it happens</p>
 </div>
 <svg class="wave" viewBox="0 0 1440 40" preserveAspectRatio="none"><path fill="#F4622D" d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z"/></svg>
 <div class="near-me">
-  <button class="near-me-btn" id="useLocationBtn">&#128205; Use My Location</button>
-  <button class="near-me-toggle" id="toggleAddress">or type an address / hotel instead</button>
-  <div class="near-me-address" id="addressBox">
-    <input type="text" id="addressInput" placeholder="e.g. 1300 N Atlantic Ave, Cocoa Beach">
-    <button id="addressGoBtn">Go</button>
-  </div>
-  <div class="near-me-status" id="nearMeStatus"></div>
-  <div class="intent-picker" id="intentPicker">
-    <div class="intent-label">What are you looking for?</div>
-    <button class="intent-btn" data-intent="bands">&#127928; Bands</button>
-    <button class="intent-btn" data-intent="bars">&#127866; Bars</button>
-    <button class="intent-btn" data-intent="both">Both</button>
+  <div class="near-me-card">
+    <button class="near-me-btn" id="useLocationBtn">&#128205; Use My Location</button>
+    <button class="near-me-toggle" id="toggleAddress">or type an address / hotel instead</button>
+    <div class="near-me-address" id="addressBox">
+      <input type="text" id="addressInput" placeholder="e.g. 1300 N Atlantic Ave, Cocoa Beach">
+      <button id="addressGoBtn">Go</button>
+    </div>
+    <div class="near-me-status" id="nearMeStatus"></div>
+    <div class="intent-picker" id="intentPicker">
+      <div class="intent-label">What are you looking for?</div>
+      <button class="intent-btn" data-intent="bands">&#127928; Bands</button>
+      <button class="intent-btn" data-intent="bars">&#127866; Bars</button>
+      <button class="intent-btn" data-intent="both">Both</button>
+    </div>
   </div>
 </div>
 <div class="gate" id="entryGate">
