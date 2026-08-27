@@ -3,11 +3,6 @@ name: Deploy site to Hostinger
 # Uploads the public web files straight to Hostinger over FTP any time they
 # change on main — replaces zipping the files and uploading them by hand.
 on:
-  # Re-enabled after being manual-only for a while: this used to double-nest
-  # public_html on the server because the FTP account's home directory and
-  # HOSTINGER_FTP_DIR both pointed at public_html. Trying it live again --
-  # if it nests again, clear out public_html on the server and go back to
-  # manual-only (workflow_dispatch) until HOSTINGER_FTP_DIR is corrected.
   push:
     branches: [main]
   workflow_dispatch: {}
@@ -25,7 +20,13 @@ jobs:
           server: ${{ secrets.HOSTINGER_FTP_SERVER }}
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          server-dir: ${{ secrets.HOSTINGER_FTP_DIR }}
+          # Deliberately not using the HOSTINGER_FTP_DIR secret: the FTP
+          # account already lands directly in public_html on login, and
+          # that secret also says "public_html" -- combined, that's what
+          # was creating a public_html/public_html nested on the server on
+          # every deploy. "./" means "wherever the connection lands," no
+          # extra folder appended.
+          server-dir: ./
           local-dir: ./
           exclude: |
             **/.git*
