@@ -1,0 +1,44 @@
+name: Deploy MediaIn360 site to Hostinger
+
+# MediaIn360's own repo (knarfco/mediain360) can't hold a working copy of
+# this account's FTP secrets without duplicating credentials — so instead
+# this workflow checks out that repo's code and deploys it from here,
+# reusing the Hostinger secrets already set up on this repo. Runs on a
+# schedule (a private repo can't push-trigger a workflow in a different
+# repo without its own token) plus manual dispatch for an on-demand push.
+#
+# Needs one additional secret beyond the existing HOSTINGER_* ones:
+# MEDIAIN360_PAT — a GitHub Personal Access Token with read access to
+# knarfco/mediain360, used only to check out its code.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout MediaIn360 site
+        uses: actions/checkout@v4
+        with:
+          repository: knarfco/mediain360
+          token: ${{ secrets.MEDIAIN360_PAT }}
+          path: mediain360-site
+
+      - name: Upload to Hostinger via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          protocol: ftp
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          server-dir: ./
+          local-dir: ./mediain360-site/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/*.sql
+            **/*.sh
+            **/README.md

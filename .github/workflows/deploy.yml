@@ -1,10 +1,13 @@
 name: Deploy site to Hostinger
 
-# Uploads the public web files straight to Hostinger over FTP any time they
-# change on main — replaces zipping the files and uploading them by hand.
+# Uploads the public web files straight to Hostinger over FTP.
+# Push-trigger deliberately removed: this account's default landing
+# directory is now MediaIn360's deploy target too (see
+# deploy-mediain360.yml), so an automatic deploy on every push here
+# would overwrite MediaIn360's live files with this repo's own.
+# Trigger manually (Actions tab -> this workflow -> Run workflow) if
+# this site itself needs a fresh deploy.
 on:
-  push:
-    branches: [main]
   workflow_dispatch: {}
 
 jobs:
