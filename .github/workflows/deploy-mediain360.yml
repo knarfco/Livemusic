@@ -10,9 +10,13 @@ name: Deploy MediaIn360 site to Hostinger
 # Needs one additional secret beyond the existing HOSTINGER_* ones:
 # MEDIAIN360_PAT — a GitHub Personal Access Token with read access to
 # knarfco/mediain360, used only to check out its code.
+#
+# Manual-dispatch only for now: this was originally scheduled, but that
+# meant it ran (and failed) every few hours before MEDIAIN360_PAT ever
+# got added, spamming failure-notification emails all night for a secret
+# that was never wired up. Re-add a schedule trigger once that secret
+# actually exists and a manual run succeeds.
 on:
-  schedule:
-    - cron: "*/10 * * * *"
   workflow_dispatch: {}
 
 jobs:
